@@ -1,0 +1,129 @@
+{% extends 'base.html' %}
+{% block title %}Scores — TheLife{% endblock %}
+{% block extra_head %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+{% endblock %}
+{% block content %}
+<div class="page-header">
+    <h2>Scores & Analytics</h2>
+    <a href="{% url 'scoring:history' %}" class="btn btn-outline btn-sm">View History</a>
+</div>
+
+<!-- Today's Score -->
+<div class="card-grid card-grid-4 mb-3">
+    <div class="stat-card stat-cyan">
+        <div class="stat-value">{{ today_score.final_score|floatformat:0|default:"—" }}</div>
+        <div class="stat-label">Today</div>
+    </div>
+    <div class="stat-card stat-emerald">
+        <div class="stat-value">{{ weekly_score.avg_score|floatformat:0|default:"—" }}</div>
+        <div class="stat-label">This Week Avg</div>
+    </div>
+    <div class="stat-card stat-pink">
+        <div class="stat-value">{{ monthly_score.avg_score|floatformat:0|default:"—" }}</div>
+        <div class="stat-label">This Month Avg</div>
+    </div>
+    <div class="stat-card stat-warning">
+        <div class="stat-value">{{ today_score.logging_coverage|floatformat:0|default:"0" }}%</div>
+        <div class="stat-label">Coverage</div>
+    </div>
+</div>
+
+<!-- Score Breakdown -->
+{% if today_score %}
+<div class="card">
+    <div class="card-header">
+        <h3>Today's Breakdown</h3>
+        <form method="post" action="{% url 'scoring:recalculate' %}" style="display:inline;">
+            {% csrf_token %}
+            <input type="hidden" name="date" value="{{ today_score.date|date:'Y-m-d' }}">
+            <button type="submit" class="btn btn-outline btn-sm">↻ Recalculate</button>
+        </form>
+    </div>
+    {% include 'scoring/partials/score_card.html' with score=today_score %}
+</div>
+{% endif %}
+
+<!-- Score Chart -->
+<div class="card mt-3">
+    <div class="card-header"><h3>30-Day Trend</h3></div>
+    <canvas id="scoreChart" height="80"></canvas>
+</div>
+
+<!-- LLM Feedback -->
+{% if today_score and today_score.llm_feedback %}
+<div class="card mt-3">
+    <div class="card-header">
+        <h3 class="text-pink">AI Scrutinizer Says...</h3>
+        <span class="badge {% if today_score.llm_adjustment >= 0 %}badge-emerald{% else %}badge-danger{% endif %}">
+            {% if today_score.llm_adjustment >= 0 %}+{% endif %}{{ today_score.llm_adjustment|floatformat:1 }}
+        </span>
+    </div>
+    <div class="llm-feedback">{{ today_score.llm_feedback|linebreaksbr }}</div>
+</div>
+{% endif %}
+
+<!-- Recent Scores -->
+<div class="card mt-3">
+    <div class="card-header"><h3>Last 7 Days</h3></div>
+    {% for s in recent_scores %}
+    <div class="log-entry">
+        <div class="log-body">
+            <div class="flex-between">
+                <div class="log-title">{{ s.date|date:"D, M d" }}</div>
+                <div style="font-size:1.3rem;font-weight:700;" class="{% if s.final_score >= 70 %}text-emerald{% elif s.final_score >= 40 %}text-cyan{% else %}text-danger{% endif %}">
+                    {{ s.final_score|floatformat:0 }}
+                </div>
+            </div>
+            <div class="log-meta">
+                <span>Work: {{ s.work_score|floatformat:0 }}</span>
+                <span>Skills: {{ s.skill_score|floatformat:0 }}</span>
+                <span>Fitness: {{ s.fitness_score|floatformat:0 }}</span>
+                <span>{{ s.total_logged_hours|floatformat:1 }}h logged</span>
+                {% if s.llm_adjustment %}<span class="{% if s.llm_adjustment >= 0 %}text-emerald{% else %}text-danger{% endif %}">LLM: {% if s.llm_adjustment >= 0 %}+{% endif %}{{ s.llm_adjustment|floatformat:1 }}</span>{% endif %}
+            </div>
+        </div>
+    </div>
+    {% empty %}
+    <div class="empty-state"><p>No scores yet. Log activities to start building your score!</p></div>
+    {% endfor %}
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const ctx = document.getElementById('scoreChart');
+    if (!ctx) return;
+    const data = {{ chart_data|safe }};
+    if (!data.labels || !data.labels.length) return;
+    new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: data.labels,
+            datasets: [{
+                label: 'Final Score',
+                data: data.scores,
+                borderColor: '#00BCD4',
+                backgroundColor: 'rgba(0,188,212,0.1)',
+                fill: true,
+                tension: 0.3,
+            }, {
+                label: 'Base Score',
+                data: data.base_scores,
+                borderColor: '#666',
+                borderDash: [5, 5],
+                fill: false,
+                tension: 0.3,
+            }]
+        },
+        options: {
+            responsive: true,
+            scales: {
+                y: { min: 0, max: 100, grid: { color: '#1F1F1F' }, ticks: { color: '#999' } },
+                x: { grid: { color: '#1F1F1F' }, ticks: { color: '#999' } }
+            },
+            plugins: { legend: { labels: { color: '#999' } } }
+        }
+    });
+});
+</script>
+{% endblock %}

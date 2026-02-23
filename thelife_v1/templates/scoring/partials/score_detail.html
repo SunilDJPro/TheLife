@@ -1,0 +1,8 @@
+{% if score %}
+{% include 'scoring/partials/score_card.html' %}
+{% if score.llm_feedback %}
+<div class="llm-feedback mt-2">{{ score.llm_feedback|linebreaksbr }}</div>
+{% endif %}
+{% else %}
+<p class="text-muted">No score for this date.</p>
+{% endif %}

@@ -1,0 +1,7 @@
+{% extends 'base.html' %}
+{% load widget_tweaks %}
+{% block title %}New Work Log — TheLife{% endblock %}
+{% block content %}
+<div class="page-header"><h2>Log Work Entry</h2></div>
+<div class="card">{% include 'work/partials/work_log_form.html' %}</div>
+{% endblock %}

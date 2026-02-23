@@ -1,0 +1,29 @@
+<div class="card-grid card-grid-3" style="gap:8px;">
+    <div style="text-align:center;">
+        <div style="font-size:0.72rem;color:var(--text-muted);text-transform:uppercase;">Work</div>
+        <div class="progress-bar progress-cyan mt-1"><div class="progress-fill" style="width:{{ score.work_score }}%;"></div></div>
+        <div style="font-size:0.8rem;color:var(--cyan);">{{ score.work_score|floatformat:0 }}</div>
+    </div>
+    <div style="text-align:center;">
+        <div style="font-size:0.72rem;color:var(--text-muted);text-transform:uppercase;">Skills</div>
+        <div class="progress-bar progress-emerald mt-1"><div class="progress-fill" style="width:{{ score.skill_score }}%;"></div></div>
+        <div style="font-size:0.8rem;color:var(--emerald);">{{ score.skill_score|floatformat:0 }}</div>
+    </div>
+    <div style="text-align:center;">
+        <div style="font-size:0.72rem;color:var(--text-muted);text-transform:uppercase;">Fitness</div>
+        <div class="progress-bar progress-pink mt-1"><div class="progress-fill" style="width:{{ score.fitness_score }}%;"></div></div>
+        <div style="font-size:0.8rem;color:var(--pink);">{{ score.fitness_score|floatformat:0 }}</div>
+    </div>
+</div>
+<div class="card-grid card-grid-2 mt-2" style="gap:8px;">
+    <div style="text-align:center;">
+        <div style="font-size:0.72rem;color:var(--text-muted);text-transform:uppercase;">Personal</div>
+        <div class="progress-bar progress-cyan mt-1"><div class="progress-fill" style="width:{{ score.personal_score }}%;"></div></div>
+        <div style="font-size:0.8rem;">{{ score.personal_score|floatformat:0 }}</div>
+    </div>
+    <div style="text-align:center;">
+        <div style="font-size:0.72rem;color:var(--text-muted);text-transform:uppercase;">Consistency</div>
+        <div class="progress-bar progress-emerald mt-1"><div class="progress-fill" style="width:{{ score.consistency_score }}%;"></div></div>
+        <div style="font-size:0.8rem;">{{ score.consistency_score|floatformat:0 }}</div>
+    </div>
+</div>

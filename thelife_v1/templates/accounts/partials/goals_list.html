@@ -1,0 +1,24 @@
+{% if goals %}
+{% for goal in goals %}
+<div class="log-entry">
+    <div class="log-color-bar" style="background: var(--emerald);"></div>
+    <div class="log-body">
+        <div class="log-title">{{ goal.title }}</div>
+        <div class="log-meta">
+            {% if goal.target_date %}<span>Target: {{ goal.target_date|date:"M d, Y" }}</span>{% endif %}
+            <span class="badge {% if goal.is_active %}badge-emerald{% else %}badge-muted{% endif %}">
+                {% if goal.is_active %}Active{% else %}Inactive{% endif %}
+            </span>
+        </div>
+        {% if goal.description %}<p class="text-muted mt-1" style="font-size:0.82rem;">{{ goal.description }}</p>{% endif %}
+    </div>
+    <form method="post" action="{% url 'accounts:delete_goal' goal.id %}"
+          hx-post="{% url 'accounts:delete_goal' goal.id %}" hx-target="#goals-list" hx-swap="innerHTML">
+        {% csrf_token %}
+        <button type="submit" class="btn btn-ghost btn-sm text-danger" onclick="return confirm('Delete this goal?')">✕</button>
+    </form>
+</div>
+{% endfor %}
+{% else %}
+<p class="text-muted" style="font-size:0.85rem;">No goals set yet. Add your long-term goals above for AI-powered scoring alignment.</p>
+{% endif %}

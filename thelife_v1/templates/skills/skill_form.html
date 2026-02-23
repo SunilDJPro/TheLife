@@ -1,0 +1,9 @@
+{% extends 'base.html' %}
+{% load widget_tweaks %}
+{% block title %}{% if is_new %}New Skill{% else %}Edit Skill{% endif %} — TheLife{% endblock %}
+{% block content %}
+<div class="page-header"><h2>{% if is_new %}Add New Skill{% else %}Edit: {{ skill.name }}{% endif %}</h2></div>
+<div class="card">
+    {% include 'skills/partials/skill_form.html' %}
+</div>
+{% endblock %}

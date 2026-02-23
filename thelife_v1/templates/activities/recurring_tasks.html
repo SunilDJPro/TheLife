@@ -1,0 +1,34 @@
+{% extends 'base.html' %}
+{% load widget_tweaks %}
+{% block title %}Recurring Tasks — TheLife{% endblock %}
+{% block content %}
+<div class="page-header">
+    <h2>Recurring Tasks</h2>
+</div>
+
+<div class="card">
+    <div class="card-header"><h3>Add Recurring Task</h3></div>
+    <form method="post" hx-post="{% url 'activities:recurring_tasks' %}" hx-target="#recurring-list" hx-swap="innerHTML">
+        {% csrf_token %}
+        <div class="form-row">
+            <div class="form-group"><label>Category</label>{{ form.category }}</div>
+            <div class="form-group"><label>Title</label>{{ form.title }}</div>
+            <div class="form-group"><label>Frequency</label>{{ form.frequency }}</div>
+        </div>
+        <div class="form-row">
+            <div class="form-group"><label>Start Time</label>{{ form.start_time }}</div>
+            <div class="form-group"><label>End Time</label>{{ form.end_time }}</div>
+            <div class="form-group"><label>Day of Week (weekly)</label>{{ form.day_of_week }}</div>
+        </div>
+        <div class="form-group"><label>Description</label>{{ form.description }}</div>
+        <button type="submit" class="btn btn-cyan btn-sm">+ Add Recurring Task</button>
+    </form>
+</div>
+
+<div class="card mt-3">
+    <div class="card-header"><h3>Your Recurring Tasks</h3></div>
+    <div id="recurring-list">
+        {% include 'activities/partials/recurring_list.html' %}
+    </div>
+</div>
+{% endblock %}

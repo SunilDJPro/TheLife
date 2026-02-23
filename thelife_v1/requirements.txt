@@ -1,0 +1,15 @@
+Django>=5.1,<5.2
+psycopg2-binary>=2.9
+django-htmx>=1.19
+django-extensions>=3.2
+django-cryptography>=1.1
+litellm>=1.40
+whitenoise>=6.7
+python-dotenv>=1.0
+django-widget-tweaks>=1.5
+pywebpush>=2.0
+py-vapid>=1.9
+cryptography>=43.0
+celery>=5.4
+redis>=5.0
+django-celery-beat>=2.6

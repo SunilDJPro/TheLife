@@ -1,0 +1,32 @@
+{% if logs %}
+{% for log in logs %}
+<div class="log-entry">
+    <div class="log-color-bar" style="background: var(--pink);"></div>
+    <div class="log-body">
+        <div class="log-title">{{ log.title }}</div>
+        <div class="log-meta">
+            <span>{{ log.date|date:"M d, Y" }}</span>
+            <span class="badge badge-pink">{{ log.get_entertainment_type_display }}</span>
+            {% if log.venue %}<span>📍 {{ log.venue }}</span>{% endif %}
+            {% if log.duration_minutes %}<span>{{ log.duration_minutes }}min</span>{% endif %}
+            {% if log.rating %}<span>⭐ {{ log.rating }}/10</span>{% endif %}
+            {% if log.is_scheduled %}<span class="badge badge-cyan">Scheduled</span>{% endif %}
+        </div>
+        {% if log.description %}<p class="text-muted mt-1" style="font-size:0.82rem;">{{ log.description|truncatewords:20 }}</p>{% endif %}
+    </div>
+    <div class="log-actions">
+        <a href="{% url 'entertainment:edit' log.id %}" class="btn btn-ghost btn-sm">Edit</a>
+        <form method="post" action="{% url 'entertainment:delete' log.id %}"
+              hx-post="{% url 'entertainment:delete' log.id %}" hx-target="#entertainment-list" hx-swap="innerHTML" style="display:inline;">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-ghost btn-sm text-danger">✕</button>
+        </form>
+    </div>
+</div>
+{% endfor %}
+{% else %}
+<div class="empty-state">
+    <div class="empty-icon">🎬</div>
+    <p>No entertainment logged yet.</p>
+</div>
+{% endif %}

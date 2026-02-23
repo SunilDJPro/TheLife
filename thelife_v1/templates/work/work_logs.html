@@ -1,0 +1,9 @@
+{% extends 'base.html' %}
+{% block title %}Work Logs — TheLife{% endblock %}
+{% block content %}
+<div class="page-header">
+    <h2>Work Logs</h2>
+    <a href="{% url 'work:log_create' %}" class="btn btn-cyan btn-sm">+ New Log</a>
+</div>
+<div class="card">{% include 'work/partials/work_log_list.html' %}</div>
+{% endblock %}

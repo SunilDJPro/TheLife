@@ -1,0 +1,21 @@
+{% load widget_tweaks %}
+<form method="post" action="{% url 'work:log_create' %}"
+      hx-post="{% url 'work:log_create' %}" hx-target="#work-log-list" hx-swap="innerHTML">
+    {% csrf_token %}
+    <div class="form-row">
+        <div class="form-group"><label>Project</label>{{ form.project }}</div>
+        <div class="form-group"><label>Deliverable</label>{{ form.deliverable }}</div>
+        <div class="form-group"><label>Date</label>{{ form.date }}</div>
+    </div>
+    <div class="form-group"><label>Title</label>{{ form.title }}</div>
+    <div class="form-group"><label>Description</label>{{ form.description }}</div>
+    <div class="form-row">
+        <div class="form-group"><label>Hours Spent</label>{{ form.hours_spent }}</div>
+        <div class="form-group"><label>Status Tag</label>{{ form.status_tag }}</div>
+    </div>
+    <div class="form-group"><label>Blockers</label>{{ form.blockers }}</div>
+    <div class="btn-group mt-3">
+        <button type="submit" class="btn btn-cyan">Save Work Log</button>
+        <a href="{% url 'work:dashboard' %}" class="btn btn-outline">Cancel</a>
+    </div>
+</form>

@@ -1,0 +1,11 @@
+{% extends 'base.html' %}
+{% load widget_tweaks %}
+{% block title %}{% if is_new %}New Activity{% else %}Edit Activity{% endif %} — TheLife{% endblock %}
+{% block content %}
+<div class="page-header">
+    <h2>{% if is_new %}Log New Activity{% else %}Edit Activity{% endif %}</h2>
+</div>
+<div class="card">
+    {% include 'activities/partials/log_form.html' %}
+</div>
+{% endblock %}

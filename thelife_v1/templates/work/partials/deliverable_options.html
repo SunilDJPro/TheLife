@@ -1,0 +1,4 @@
+<option value="">-- Select Deliverable --</option>
+{% for d in deliverables %}
+<option value="{{ d.id }}">{{ d.title }}</option>
+{% endfor %}

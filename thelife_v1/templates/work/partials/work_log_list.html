@@ -1,0 +1,19 @@
+{% if logs %}
+{% for log in logs %}
+<div class="log-entry">
+    <div class="log-body">
+        <div class="log-title">{{ log.title }}</div>
+        <div class="log-meta">
+            <span>{{ log.date|date:"M d" }}</span>
+            {% if log.project %}<span class="badge badge-cyan">{{ log.project.name }}</span>{% endif %}
+            <span>{{ log.hours_spent }}h</span>
+            {% if log.status_tag %}<span class="badge badge-muted">{{ log.status_tag }}</span>{% endif %}
+        </div>
+        {% if log.description %}<p class="text-muted mt-1" style="font-size:0.82rem;">{{ log.description|truncatewords:20 }}</p>{% endif %}
+        {% if log.blockers %}<p class="text-danger mt-1" style="font-size:0.8rem;">⚠ {{ log.blockers|truncatewords:15 }}</p>{% endif %}
+    </div>
+</div>
+{% endfor %}
+{% else %}
+<div class="empty-state"><p>No work logs found.</p></div>
+{% endif %}

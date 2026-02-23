@@ -1,0 +1,15 @@
+<div class="flex gap-3" style="flex-wrap:wrap;">
+    {% if profile.current_role %}
+    <div><span class="text-muted" style="font-size:0.75rem;">ROLE</span><br><strong>{{ profile.current_role }}</strong></div>
+    {% endif %}
+    {% if profile.organization %}
+    <div><span class="text-muted" style="font-size:0.75rem;">ORG</span><br><strong>{{ profile.organization }}</strong></div>
+    {% endif %}
+    {% if profile.department %}
+    <div><span class="text-muted" style="font-size:0.75rem;">DEPT</span><br><strong>{{ profile.department }}</strong></div>
+    {% endif %}
+    <div><span class="text-muted" style="font-size:0.75rem;">HOURS</span><br><strong>{{ profile.work_start_time|time:"H:i" }} — {{ profile.work_end_time|time:"H:i" }}</strong></div>
+</div>
+{% if profile.responsibilities %}
+<p class="text-muted mt-2" style="font-size:0.85rem;">{{ profile.responsibilities|truncatewords:40 }}</p>
+{% endif %}

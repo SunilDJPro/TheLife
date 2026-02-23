@@ -1,0 +1,61 @@
+{% extends 'base.html' %}
+{% load widget_tweaks %}
+{% block title %}Work Management — TheLife{% endblock %}
+{% block content %}
+<div class="page-header">
+    <h2>Work Management</h2>
+    <div class="btn-group">
+        <a href="{% url 'work:project_create' %}" class="btn btn-cyan btn-sm">+ New Project</a>
+        <a href="{% url 'work:log_create' %}" class="btn btn-emerald btn-sm"
+           hx-get="{% url 'work:log_create' %}" hx-target="#modal-container" hx-swap="innerHTML">+ Work Log</a>
+    </div>
+</div>
+
+<!-- Work Profile Card -->
+<div class="card">
+    <div class="card-header">
+        <h3>Work Profile</h3>
+        <a href="{% url 'work:profile_edit' %}" class="btn btn-ghost btn-sm">Edit</a>
+    </div>
+    <div id="profile-card">
+        {% include 'work/partials/profile_card.html' %}
+    </div>
+</div>
+
+<!-- Stats -->
+<div class="card-grid card-grid-3 mt-3">
+    <div class="stat-card stat-cyan">
+        <div class="stat-value">{{ today_hours|floatformat:1 }}</div>
+        <div class="stat-label">Hours Today</div>
+    </div>
+    <div class="stat-card stat-emerald">
+        <div class="stat-value">{{ active_projects|length }}</div>
+        <div class="stat-label">Active Projects</div>
+    </div>
+    <div class="stat-card stat-pink">
+        <div class="stat-value">{{ recent_logs|length }}</div>
+        <div class="stat-label">Recent Logs</div>
+    </div>
+</div>
+
+<!-- Projects List -->
+<div class="card mt-3">
+    <div class="card-header"><h3>Projects</h3></div>
+    <div id="project-list">
+        {% include 'work/partials/project_list.html' %}
+    </div>
+</div>
+
+<!-- Recent Work Logs -->
+<div class="card mt-3">
+    <div class="card-header">
+        <h3>Recent Work Logs</h3>
+        <a href="{% url 'work:log_list' %}" class="btn btn-ghost btn-sm">View All</a>
+    </div>
+    <div id="work-log-list">
+        {% include 'work/partials/work_log_list.html' with logs=recent_logs %}
+    </div>
+</div>
+
+<div id="modal-container"></div>
+{% endblock %}

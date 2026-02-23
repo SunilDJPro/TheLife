@@ -1,0 +1,22 @@
+{% if tasks %}
+{% for task in tasks %}
+<div class="log-entry">
+    <div class="log-color-bar" style="background: {{ task.category.color }};"></div>
+    <div class="log-body">
+        <div class="log-title">{{ task.title }}</div>
+        <div class="log-meta">
+            <span class="badge badge-cyan">{{ task.get_frequency_display }}</span>
+            <span>{{ task.start_time|time:"H:i" }} — {{ task.end_time|time:"H:i" }}</span>
+            <span>{{ task.category.name }}</span>
+        </div>
+    </div>
+    <form method="post" action="{% url 'activities:recurring_delete' task.id %}"
+          hx-post="{% url 'activities:recurring_delete' task.id %}" hx-target="#recurring-list" hx-swap="innerHTML">
+        {% csrf_token %}
+        <button type="submit" class="btn btn-ghost btn-sm text-danger">✕</button>
+    </form>
+</div>
+{% endfor %}
+{% else %}
+<div class="empty-state"><p>No recurring tasks set up yet.</p></div>
+{% endif %}

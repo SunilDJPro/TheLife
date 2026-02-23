@@ -1,0 +1,80 @@
+{% if cal_data.type == 'month' %}
+<!-- Month View -->
+<div class="month-grid">
+    {% for day_name in cal_data.weekdays %}
+    <div class="day-header">{{ day_name }}</div>
+    {% endfor %}
+
+    {% for week in cal_data.weeks %}
+    {% for day in week %}
+    {% if day.empty %}
+    <div class="day-cell empty"></div>
+    {% else %}
+    <a class="day-cell {% if day.is_today %}today{% endif %} {% if day.is_future %}future{% endif %}"
+       href="?view=day&date={{ day.date|date:'Y-m-d' }}"
+       style="text-decoration:none; color:inherit;">
+        <div class="day-number">{{ day.day }}</div>
+        {% if day.log_count > 0 %}
+        <div class="day-indicator"></div>
+        {% endif %}
+        {% if day.score_value is not None %}
+        <div class="day-score {% if day.score_value >= 75 %}text-emerald{% elif day.score_value >= 50 %}text-cyan{% elif day.score_value >= 25 %}text-warning{% else %}text-danger{% endif %}">
+            {{ day.score_value|floatformat:0 }}
+        </div>
+        {% endif %}
+    </a>
+    {% endif %}
+    {% endfor %}
+    {% endfor %}
+</div>
+
+{% elif cal_data.type == 'week' %}
+<!-- Week View -->
+<div class="week-grid">
+    {% for day in cal_data.days %}
+    <div class="week-day {% if day.is_today %}today{% endif %}">
+        <div class="day-header-label">
+            {{ day.day_name }} <span class="day-num">{{ day.day_number }}</span>
+            {% if day.score %}
+            <span class="badge {% if day.score.final_score >= 50 %}badge-emerald{% else %}badge-warning{% endif %}" style="float:right;">
+                {{ day.score.final_score|floatformat:0 }}
+            </span>
+            {% endif %}
+        </div>
+        {% for log in day.logs %}
+        <div style="padding:4px 0; font-size:0.78rem; border-bottom:1px solid var(--border-primary);">
+            <span style="color:{{ log.category.color }}">●</span>
+            {{ log.start_time|time:"H:i" }} {{ log.title|truncatewords:5 }}
+        </div>
+        {% empty %}
+        <div class="text-muted" style="font-size:0.75rem; padding-top:8px;">No logs</div>
+        {% endfor %}
+        {% if day.is_today %}
+        <a href="{% url 'activities:log_create' %}?date={{ day.date|date:'Y-m-d' }}"
+           class="btn btn-ghost btn-sm mt-2" style="font-size:0.72rem;">+ Log</a>
+        {% endif %}
+    </div>
+    {% endfor %}
+</div>
+
+{% else %}
+<!-- Day View -->
+<div class="day-timeline">
+    {% for slot in cal_data.hours %}
+    <div class="time-slot {% if slot.has_logs %}has-log{% endif %}">
+        <div class="time-label">{{ slot.label }}</div>
+        <div class="time-content">
+            {% for log in slot.logs %}
+            <div style="margin-bottom:4px;">
+                <span style="color:{{ log.category.color }}">●</span>
+                <strong style="font-size:0.85rem;">{{ log.title }}</strong>
+                <span class="text-muted" style="font-size:0.75rem;">
+                    {{ log.start_time|time:"H:i" }}–{{ log.end_time|time:"H:i" }}
+                </span>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% endif %}

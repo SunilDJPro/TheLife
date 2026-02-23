@@ -1,0 +1,20 @@
+{% if sessions %}
+{% for s in sessions %}
+<div class="log-entry">
+    <div class="log-body">
+        <div class="log-title">{{ s.resource.title }}</div>
+        <div class="log-meta">
+            <span>{{ s.date|date:"M d" }}</span>
+            <span>{{ s.start_time|time:"H:i" }} — {{ s.end_time|time:"H:i" }}</span>
+            <span>{{ s.duration_minutes }}min</span>
+            {% if s.pages_read %}<span>📖 {{ s.pages_read }} pages ({{ s.pages_per_hour }}/hr)</span>{% endif %}
+            {% if s.sections_count %}<span>📚 {{ s.sections_count }} sections</span>{% endif %}
+            <span>⭐ {{ s.get_rating_display }}</span>
+        </div>
+        {% if s.notes %}<p class="text-muted mt-1" style="font-size:0.82rem;">{{ s.notes|truncatewords:20 }}</p>{% endif %}
+    </div>
+</div>
+{% endfor %}
+{% else %}
+<div class="empty-state"><p>No study sessions logged yet.</p></div>
+{% endif %}

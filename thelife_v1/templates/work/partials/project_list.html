@@ -1,0 +1,18 @@
+{% if projects %}
+{% for project in projects %}
+<div class="log-entry">
+    <div class="log-color-bar" style="background: {% if project.status == 'active' %}var(--cyan){% elif project.status == 'completed' %}var(--emerald){% else %}var(--text-muted){% endif %};"></div>
+    <div class="log-body">
+        <a href="{% url 'work:project_detail' project.id %}" class="log-title" style="color:var(--text-white);">{{ project.name }}</a>
+        <div class="log-meta">
+            <span class="badge {% if project.status == 'active' %}badge-cyan{% elif project.status == 'completed' %}badge-emerald{% else %}badge-muted{% endif %}">{{ project.get_status_display }}</span>
+            <span class="badge {% if project.priority == 'critical' %}badge-danger{% elif project.priority == 'high' %}badge-warning{% else %}badge-muted{% endif %}">{{ project.get_priority_display }}</span>
+            {% if project.target_date %}<span>Due: {{ project.target_date|date:"M d" }}</span>{% endif %}
+            <span>{{ project.deliverables.count }} deliverables</span>
+        </div>
+    </div>
+</div>
+{% endfor %}
+{% else %}
+<div class="empty-state"><p>No projects yet. Create your first project to start tracking work.</p></div>
+{% endif %}

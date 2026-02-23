@@ -1,0 +1,21 @@
+<div class="card">
+{% for s in scores %}
+<div class="log-entry">
+    <div class="log-body">
+        <div class="flex-between">
+            <a href="{% url 'scoring:detail' s.date|date:'Y-m-d' %}" class="log-title" style="color:var(--text-white);">{{ s.date|date:"D, M d Y" }}</a>
+            <div style="font-size:1.3rem;font-weight:700;" class="{% if s.final_score >= 70 %}text-emerald{% elif s.final_score >= 40 %}text-cyan{% else %}text-danger{% endif %}">{{ s.final_score|floatformat:0 }}</div>
+        </div>
+        <div class="log-meta">
+            <span>Work: {{ s.work_score|floatformat:0 }}</span>
+            <span>Skills: {{ s.skill_score|floatformat:0 }}</span>
+            <span>Fitness: {{ s.fitness_score|floatformat:0 }}</span>
+            <span>{{ s.total_logged_hours|floatformat:1 }}h</span>
+            <span>{{ s.logging_coverage|floatformat:0 }}% coverage</span>
+        </div>
+    </div>
+</div>
+{% empty %}
+<div class="empty-state"><p>No daily scores yet.</p></div>
+{% endfor %}
+</div>

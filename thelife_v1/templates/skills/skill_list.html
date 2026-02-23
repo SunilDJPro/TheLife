@@ -1,0 +1,77 @@
+{% extends 'base.html' %}
+{% block title %}Skills — TheLife{% endblock %}
+{% block content %}
+<div class="page-header">
+    <h2>Skill Management</h2>
+    <a href="{% url 'skills:skill_create' %}" class="btn btn-emerald btn-sm">+ New Skill</a>
+</div>
+
+{% if not can_activate %}
+<div class="alert alert-warning">
+    ⚠ You have {{ max_active }} active skills (maximum). Complete or pause one before activating another.
+</div>
+{% endif %}
+
+<!-- Active Skills -->
+<div class="card">
+    <div class="card-header">
+        <h3 class="text-emerald">Active Skills ({{ active_skills|length }}/{{ max_active }})</h3>
+    </div>
+    {% for skill in active_skills %}
+    <div class="log-entry skill-card">
+        <div class="log-body">
+            <a href="{% url 'skills:skill_detail' skill.id %}" class="log-title" style="color:var(--text-white);">{{ skill.name }}</a>
+            <div class="log-meta">
+                <span class="badge badge-emerald">Active</span>
+                <span>{{ skill.resources.count }} resources</span>
+                <span>Progress: {{ skill.progress_percent }}%</span>
+            </div>
+            <div class="progress-bar progress-emerald mt-2" style="max-width:300px;">
+                <div class="progress-fill" style="width:{{ skill.progress_percent }}%;"></div>
+            </div>
+        </div>
+    </div>
+    {% empty %}
+    <div class="empty-state"><p>No active skills. Activate a queued skill to start learning!</p></div>
+    {% endfor %}
+</div>
+
+<!-- Queued Skills -->
+{% if queued_skills %}
+<div class="card mt-3">
+    <div class="card-header"><h3>Queued</h3></div>
+    {% for skill in queued_skills %}
+    <div class="log-entry skill-card queued">
+        <div class="log-body">
+            <a href="{% url 'skills:skill_detail' skill.id %}" class="log-title" style="color:var(--text-white);">{{ skill.name }}</a>
+            <div class="log-meta">
+                <span class="badge badge-muted">Queued</span>
+                <span>Priority: {{ skill.get_priority_display }}</span>
+            </div>
+        </div>
+        {% if can_activate %}
+        <form method="post" action="{% url 'skills:skill_activate' skill.id %}">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-emerald btn-sm">Activate</button>
+        </form>
+        {% endif %}
+    </div>
+    {% endfor %}
+</div>
+{% endif %}
+
+<!-- Completed Skills -->
+{% if completed_skills %}
+<div class="card mt-3">
+    <div class="card-header"><h3 class="text-emerald">Completed ✓</h3></div>
+    {% for skill in completed_skills %}
+    <div class="log-entry skill-card completed">
+        <div class="log-body">
+            <a href="{% url 'skills:skill_detail' skill.id %}" class="log-title" style="color:var(--text-white);">{{ skill.name }}</a>
+            <div class="log-meta"><span class="badge badge-emerald">Completed</span></div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% endif %}
+{% endblock %}

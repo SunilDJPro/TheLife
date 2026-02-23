@@ -1,0 +1,50 @@
+{% if just_saved %}<div class="alert alert-success">Activity logged!</div>{% endif %}
+
+{% if unfilled_blocks %}
+<div class="catchup-banner mb-3">
+    <h3>⏰ {{ unfilled_blocks|length }} unfilled block{{ unfilled_blocks|length|pluralize }}</h3>
+    <div class="catchup-blocks">
+        {% for block in unfilled_blocks %}
+        <a href="{% url 'activities:log_create' %}?date={{ selected_date|date:'Y-m-d' }}&start_time={{ block.start_time|time:'H:i' }}&end_time={{ block.end_time|time:'H:i' }}"
+           class="catchup-block"
+           hx-get="{% url 'activities:log_create' %}?date={{ selected_date|date:'Y-m-d' }}&start_time={{ block.start_time|time:'H:i' }}&end_time={{ block.end_time|time:'H:i' }}"
+           hx-target="#modal-container" hx-swap="innerHTML">
+            🕐 {{ block.start_time|time:"H:i" }} — {{ block.end_time|time:"H:i" }}
+        </a>
+        {% endfor %}
+    </div>
+</div>
+{% endif %}
+
+{% if logs %}
+{% for log in logs %}
+<div class="log-entry">
+    <div class="log-color-bar" style="background: {{ log.category.color }};"></div>
+    <div class="log-body">
+        <div class="log-title">{{ log.title }}</div>
+        <div class="log-meta">
+            <span>{{ log.start_time|time:"H:i" }} — {{ log.end_time|time:"H:i" }}</span>
+            <span class="badge badge-muted">{{ log.category.name }}</span>
+            {% if log.activity_type %}<span>{{ log.activity_type.name }}</span>{% endif %}
+            <span>{{ log.duration_minutes }}min</span>
+            <span>⭐ {{ log.productivity_rating }}/5</span>
+        </div>
+        {% if log.description %}<p class="text-muted mt-1" style="font-size:0.82rem;">{{ log.description|truncatewords:30 }}</p>{% endif %}
+    </div>
+    <div class="log-actions">
+        <a href="{% url 'activities:log_edit' log.id %}" class="btn btn-ghost btn-sm"
+           hx-get="{% url 'activities:log_edit' log.id %}" hx-target="#modal-container">Edit</a>
+        <form method="post" action="{% url 'activities:log_delete' log.id %}"
+              hx-post="{% url 'activities:log_delete' log.id %}" hx-target="#log-list-area" hx-swap="innerHTML" style="display:inline;">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-ghost btn-sm text-danger" onclick="return confirm('Delete?')">✕</button>
+        </form>
+    </div>
+</div>
+{% endfor %}
+{% else %}
+<div class="empty-state">
+    <div class="empty-icon">📋</div>
+    <p>No activities logged for this date.</p>
+</div>
+{% endif %}

@@ -1,0 +1,20 @@
+{% extends 'base.html' %}
+{% block title %}Score History — TheLife{% endblock %}
+{% block content %}
+<div class="page-header">
+    <h2>Score History</h2>
+    <div class="calendar-view-toggle">
+        <a href="?view=daily" class="{% if view_type == 'daily' %}active{% endif %}"
+           hx-get="?view=daily&partial=1" hx-target="#history-content">Daily</a>
+        <a href="?view=weekly" class="{% if view_type == 'weekly' %}active{% endif %}"
+           hx-get="?view=weekly&partial=1" hx-target="#history-content">Weekly</a>
+        <a href="?view=monthly" class="{% if view_type == 'monthly' %}active{% endif %}"
+           hx-get="?view=monthly&partial=1" hx-target="#history-content">Monthly</a>
+    </div>
+</div>
+<div id="history-content">
+    {% if view_type == 'weekly' %}{% include 'scoring/partials/weekly_history.html' %}
+    {% elif view_type == 'monthly' %}{% include 'scoring/partials/monthly_history.html' %}
+    {% else %}{% include 'scoring/partials/daily_history.html' %}{% endif %}
+</div>
+{% endblock %}

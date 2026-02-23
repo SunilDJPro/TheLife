@@ -1,0 +1,21 @@
+<div class="card">
+{% for s in scores %}
+<div class="log-entry">
+    <div class="log-body">
+        <div class="flex-between">
+            <div class="log-title">Week {{ s.week_number }}, {{ s.year }}</div>
+            <div style="font-size:1.3rem;font-weight:700;" class="{% if s.avg_score >= 70 %}text-emerald{% elif s.avg_score >= 40 %}text-cyan{% else %}text-danger{% endif %}">{{ s.avg_score|floatformat:0 }}</div>
+        </div>
+        <div class="log-meta">
+            <span>{{ s.start_date|date:"M d" }} — {{ s.end_date|date:"M d" }}</span>
+            <span>Best: {{ s.best_day_score|floatformat:0 }}</span>
+            <span>Worst: {{ s.worst_day_score|floatformat:0 }}</span>
+            <span>{{ s.days_logged }} days</span>
+            <span>{{ s.total_logged_hours|floatformat:1 }}h total</span>
+        </div>
+    </div>
+</div>
+{% empty %}
+<div class="empty-state"><p>No weekly scores yet.</p></div>
+{% endfor %}
+</div>

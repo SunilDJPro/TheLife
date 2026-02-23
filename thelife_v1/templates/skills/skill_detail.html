@@ -1,0 +1,60 @@
+{% extends 'base.html' %}
+{% load widget_tweaks %}
+{% block title %}{{ skill.name }} — TheLife{% endblock %}
+{% block content %}
+<div class="page-header">
+    <h2>{{ skill.name }}</h2>
+    <div class="btn-group">
+        <a href="{% url 'skills:skill_edit' skill.id %}" class="btn btn-outline btn-sm">Edit</a>
+        <span class="badge {% if skill.status == 'active' %}badge-emerald{% elif skill.status == 'completed' %}badge-cyan{% else %}badge-muted{% endif %}">{{ skill.get_status_display }}</span>
+    </div>
+</div>
+
+<!-- Stats -->
+<div class="card-grid card-grid-3 mb-3">
+    <div class="stat-card stat-emerald">
+        <div class="stat-value">{{ skill.progress_percent }}%</div>
+        <div class="stat-label">Overall Progress</div>
+    </div>
+    <div class="stat-card stat-cyan">
+        <div class="stat-value">{{ skill.resources.count }}</div>
+        <div class="stat-label">Resources</div>
+    </div>
+    <div class="stat-card stat-pink">
+        <div class="stat-value">{{ avg_pages_per_hour }}</div>
+        <div class="stat-label">Avg Pages/Hour</div>
+    </div>
+</div>
+
+<!-- Resources -->
+<div class="card">
+    <div class="card-header"><h3>Learning Resources</h3></div>
+    <form method="post" action="{% url 'skills:resource_add' skill.id %}"
+          hx-post="{% url 'skills:resource_add' skill.id %}" hx-target="#resource-list" hx-swap="innerHTML">
+        {% csrf_token %}
+        <div class="form-row">
+            <div class="form-group"><label>Type</label>{{ resource_form.resource_type }}</div>
+            <div class="form-group"><label>Title</label>{{ resource_form.title }}</div>
+            <div class="form-group"><label>Author</label>{{ resource_form.author }}</div>
+        </div>
+        <div class="form-row">
+            <div class="form-group"><label>URL</label>{{ resource_form.url }}</div>
+            <div class="form-group"><label>Total Pages (books)</label>{{ resource_form.total_pages }}</div>
+            <div class="form-group"><label>Total Sections (courses)</label>{{ resource_form.total_sections }}</div>
+        </div>
+        <button type="submit" class="btn btn-emerald btn-sm">+ Add Resource</button>
+    </form>
+    <div id="resource-list" class="mt-3">
+        {% include 'skills/partials/resource_list.html' %}
+    </div>
+</div>
+
+<!-- Sessions -->
+<div class="card mt-3">
+    <div class="card-header"><h3>Study Sessions</h3></div>
+    <div id="session-list">
+        {% include 'skills/partials/session_list.html' with sessions=recent_sessions %}
+    </div>
+</div>
+<div id="modal-container"></div>
+{% endblock %}

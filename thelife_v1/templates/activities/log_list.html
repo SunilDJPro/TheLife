@@ -1,0 +1,17 @@
+{% extends 'base.html' %}
+{% block title %}Activity Log — TheLife{% endblock %}
+{% block content %}
+<div class="page-header">
+    <h2>Activity Log — {{ selected_date|date:"D, M d Y" }}</h2>
+    <div class="btn-group">
+        <a href="?date={{ selected_date|date:'Y-m-d' }}" class="btn btn-outline btn-sm">← Prev</a>
+        <a href="{% url 'activities:log_create' %}" class="btn btn-cyan btn-sm"
+           hx-get="{% url 'activities:log_create' %}?date={{ selected_date|date:'Y-m-d' }}"
+           hx-target="#modal-container" hx-swap="innerHTML">+ Log Activity</a>
+    </div>
+</div>
+<div id="log-list-area">
+    {% include 'activities/partials/log_list.html' %}
+</div>
+<div id="modal-container"></div>
+{% endblock %}

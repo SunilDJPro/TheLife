@@ -1,0 +1,22 @@
+{% extends 'base.html' %}
+{% block title %}Entertainment — TheLife{% endblock %}
+{% block content %}
+<div class="page-header">
+    <h2>Entertainment</h2>
+    <a href="{% url 'entertainment:create' %}" class="btn btn-pink btn-sm"
+       hx-get="{% url 'entertainment:create' %}" hx-target="#modal-container" hx-swap="innerHTML">+ Log Entertainment</a>
+</div>
+
+<!-- Filters -->
+<div class="btn-group mb-3">
+    <a href="{% url 'entertainment:list' %}" class="btn btn-sm {% if not type_filter %}btn-pink{% else %}btn-outline{% endif %}">All</a>
+    <a href="?type=movie" class="btn btn-sm {% if type_filter == 'movie' %}btn-pink{% else %}btn-outline{% endif %}">Movies</a>
+    <a href="?type=series" class="btn btn-sm {% if type_filter == 'series' %}btn-pink{% else %}btn-outline{% endif %}">Series</a>
+    <a href="?type=gaming" class="btn btn-sm {% if type_filter == 'gaming' %}btn-pink{% else %}btn-outline{% endif %}">Gaming</a>
+</div>
+
+<div id="entertainment-list">
+    {% include 'entertainment/partials/log_list.html' %}
+</div>
+<div id="modal-container"></div>
+{% endblock %}

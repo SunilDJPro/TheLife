@@ -1,0 +1,25 @@
+{% extends 'base.html' %}
+{% load widget_tweaks %}
+{% block title %}Edit Work Profile — TheLife{% endblock %}
+{% block content %}
+<div class="page-header"><h2>Edit Work Profile</h2></div>
+<div class="card">
+    <form method="post">
+        {% csrf_token %}
+        <div class="form-row">
+            <div class="form-group"><label>Current Role</label>{{ form.current_role }}</div>
+            <div class="form-group"><label>Organization</label>{{ form.organization }}</div>
+            <div class="form-group"><label>Department</label>{{ form.department }}</div>
+        </div>
+        <div class="form-row">
+            <div class="form-group"><label>Work Start</label>{{ form.work_start_time }}</div>
+            <div class="form-group"><label>Work End</label>{{ form.work_end_time }}</div>
+        </div>
+        <div class="form-group"><label>Responsibilities</label>{{ form.responsibilities }}</div>
+        <div class="btn-group mt-3">
+            <button type="submit" class="btn btn-cyan">Save</button>
+            <a href="{% url 'work:dashboard' %}" class="btn btn-outline">Cancel</a>
+        </div>
+    </form>
+</div>
+{% endblock %}

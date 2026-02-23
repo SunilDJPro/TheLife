@@ -1,0 +1,23 @@
+{% if deliverables %}
+{% for d in deliverables %}
+<div class="log-entry">
+    <div class="log-color-bar" style="background: {% if d.status == 'completed' %}var(--emerald){% elif d.status == 'blocked' %}var(--danger){% elif d.status == 'in_progress' %}var(--cyan){% else %}var(--text-muted){% endif %};"></div>
+    <div class="log-body">
+        <div class="log-title">{{ d.title }}</div>
+        <div class="log-meta">
+            <span class="badge {% if d.status == 'completed' %}badge-emerald{% elif d.status == 'blocked' %}badge-danger{% elif d.status == 'in_progress' %}badge-cyan{% else %}badge-muted{% endif %}">{{ d.get_status_display }}</span>
+            {% if d.due_date %}<span>Due: {{ d.due_date|date:"M d" }}</span>{% endif %}
+        </div>
+    </div>
+    <form method="post" action="{% url 'work:deliverable_status' d.id %}"
+          hx-post="{% url 'work:deliverable_status' d.id %}" hx-target="#deliverable-list" hx-swap="innerHTML" class="flex gap-1">
+        {% csrf_token %}
+        <select name="status" class="form-input form-input-sm" style="width:auto;" onchange="this.form.requestSubmit()">
+            {% for val, label in d.STATUS_CHOICES %}<option value="{{ val }}" {% if d.status == val %}selected{% endif %}>{{ label }}</option>{% endfor %}
+        </select>
+    </form>
+</div>
+{% endfor %}
+{% else %}
+<p class="text-muted" style="font-size:0.85rem;">No deliverables yet.</p>
+{% endif %}

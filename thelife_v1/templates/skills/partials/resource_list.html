@@ -1,0 +1,24 @@
+{% if resources %}
+{% for r in resources %}
+<div class="log-entry">
+    <div class="log-color-bar" style="background: {% if r.is_completed %}var(--emerald){% else %}var(--cyan){% endif %};"></div>
+    <div class="log-body">
+        <div class="log-title">{{ r.title }}</div>
+        <div class="log-meta">
+            <span class="badge badge-muted">{{ r.get_resource_type_display }}</span>
+            {% if r.author %}<span>by {{ r.author }}</span>{% endif %}
+            <span>Progress: {{ r.progress_percent }}%</span>
+            {% if r.resource_type == 'book' %}<span>Page {{ r.current_page }}/{{ r.total_pages|default:"?" }}</span>{% endif %}
+            {% if r.total_sections %}<span>{{ r.completed_sections }}/{{ r.total_sections }} sections</span>{% endif %}
+        </div>
+        <div class="progress-bar progress-cyan mt-2" style="max-width:250px;">
+            <div class="progress-fill" style="width:{{ r.progress_percent }}%;"></div>
+        </div>
+    </div>
+    <a href="{% url 'skills:session_log' r.id %}" class="btn btn-cyan btn-sm"
+       hx-get="{% url 'skills:session_log' r.id %}" hx-target="#modal-container" hx-swap="innerHTML">+ Log Session</a>
+</div>
+{% endfor %}
+{% else %}
+<p class="text-muted" style="font-size:0.85rem;">No resources added yet.</p>
+{% endif %}

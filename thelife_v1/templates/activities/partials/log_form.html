@@ -1,0 +1,53 @@
+{% load widget_tweaks %}
+<form method="post" action="{% if log %}{% url 'activities:log_edit' log.id %}{% else %}{% url 'activities:log_create' %}{% endif %}"
+      hx-post="{% if log %}{% url 'activities:log_edit' log.id %}{% else %}{% url 'activities:log_create' %}{% endif %}"
+      hx-target="#log-list-area" hx-swap="innerHTML">
+    {% csrf_token %}
+    {% if form.errors %}
+    <div class="alert alert-error">Please fix the errors below.</div>
+    {% endif %}
+
+    <!-- Search bar for quick category/type selection -->
+    <div class="form-group">
+        <label>Quick Search</label>
+        <div class="search-container">
+            <input type="text" class="form-input" id="activity-search"
+                   placeholder="Type to search categories & types..." autocomplete="off"
+                   hx-get="{% url 'activities:search' %}" hx-trigger="keyup changed delay:300ms"
+                   hx-target="#search-results" hx-swap="innerHTML" name="q">
+            <div id="search-results" class="search-results"></div>
+        </div>
+    </div>
+
+    <div class="form-row">
+        <div class="form-group">
+            <label>Category</label>
+            {{ form.category }}
+        </div>
+        <div class="form-group">
+            <label>Type</label>
+            {{ form.activity_type }}
+        </div>
+    </div>
+    <div class="form-row">
+        <div class="form-group"><label>Date</label>{{ form.date }}</div>
+        <div class="form-group"><label>Start Time</label>{{ form.start_time }}</div>
+        <div class="form-group"><label>End Time</label>{{ form.end_time }}</div>
+    </div>
+    <div class="form-group"><label>Title</label>{{ form.title }}</div>
+    <div class="form-group"><label>Description</label>{{ form.description }}</div>
+    <div class="form-group"><label>Notes / Reflections</label>{{ form.notes }}</div>
+    <div class="form-group"><label>Productivity Rating</label>{{ form.productivity_rating }}</div>
+
+    <!-- Dynamic metadata fields loaded per category -->
+    <div id="metadata-fields"
+         hx-get="{% url 'activities:metadata_form' %}"
+         hx-trigger="change from:#id_category"
+         hx-include="#id_category"
+         hx-swap="innerHTML"></div>
+
+    <div class="btn-group mt-3">
+        <button type="submit" class="btn btn-cyan">{% if log %}Update{% else %}Save{% endif %} Activity</button>
+        <a href="{% url 'activities:log_list' %}" class="btn btn-outline">Cancel</a>
+    </div>
+</form>

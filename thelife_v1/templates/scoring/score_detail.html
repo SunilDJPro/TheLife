@@ -1,0 +1,21 @@
+{% extends 'base.html' %}
+{% block title %}Score Detail — {{ date|date:"M d, Y" }} — TheLife{% endblock %}
+{% block content %}
+<div class="page-header"><h2>Score: {{ date|date:"D, M d Y" }}</h2></div>
+{% if score %}
+<div class="card-grid card-grid-3 mb-3">
+    <div class="stat-card stat-cyan"><div class="stat-value">{{ score.base_score|floatformat:0 }}</div><div class="stat-label">Base Score</div></div>
+    <div class="stat-card {% if score.llm_adjustment >= 0 %}stat-emerald{% else %}stat-pink{% endif %}">
+        <div class="stat-value">{% if score.llm_adjustment >= 0 %}+{% endif %}{{ score.llm_adjustment|floatformat:1 }}</div>
+        <div class="stat-label">AI Adjustment</div>
+    </div>
+    <div class="stat-card stat-emerald"><div class="stat-value">{{ score.final_score|floatformat:0 }}</div><div class="stat-label">Final Score</div></div>
+</div>
+<div class="card">{% include 'scoring/partials/score_card.html' %}</div>
+{% if score.llm_feedback %}
+<div class="card mt-3"><div class="card-header"><h3 class="text-pink">AI Feedback</h3></div><div class="llm-feedback">{{ score.llm_feedback|linebreaksbr }}</div></div>
+{% endif %}
+{% else %}
+<div class="card"><div class="empty-state"><p>No score calculated for this date yet.</p></div></div>
+{% endif %}
+{% endblock %}

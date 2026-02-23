@@ -1,0 +1,98 @@
+{% load widget_tweaks %}
+
+<!-- Catch-up Banner -->
+{% if show_catchup %}
+<div class="catchup-banner">
+    <h3>⏰ You have {{ unfilled_blocks|length }} unfilled time block{{ unfilled_blocks|length|pluralize }}!</h3>
+    <p>Log what you did during these times to keep your accountability score up.</p>
+    <div class="catchup-blocks">
+        {% for block in unfilled_blocks %}
+        <a href="{% url 'activities:log_create' %}?date={{ today|date:'Y-m-d' }}&start_time={{ block.start_str }}&end_time={{ block.end_str }}"
+           class="catchup-block"
+           hx-get="{% url 'activities:log_create' %}?date={{ today|date:'Y-m-d' }}&start_time={{ block.start_str }}&end_time={{ block.end_str }}"
+           hx-target="#modal-container" hx-swap="innerHTML">
+            🕐 {{ block.start_str }} — {{ block.end_str }}
+        </a>
+        {% endfor %}
+    </div>
+</div>
+{% endif %}
+
+<!-- Stats Row -->
+<div class="card-grid card-grid-4 mb-3">
+    <div class="stat-card stat-cyan">
+        <div class="stat-value">{{ today_score.final_score|floatformat:0|default:"—" }}</div>
+        <div class="stat-label">Today's Score</div>
+    </div>
+    <div class="stat-card stat-emerald">
+        <div class="stat-value">{{ today_logs|length }}</div>
+        <div class="stat-label">Activities Logged</div>
+    </div>
+    <div class="stat-card stat-pink">
+        <div class="stat-value">{{ active_skills|length }}</div>
+        <div class="stat-label">Active Skills</div>
+    </div>
+    <div class="stat-card stat-warning">
+        <div class="stat-value">{{ today_score.logging_coverage|floatformat:0|default:"0" }}%</div>
+        <div class="stat-label">Day Coverage</div>
+    </div>
+</div>
+
+<!-- Calendar -->
+{% include 'dashboard/partials/calendar.html' %}
+
+<!-- Today's Activity Feed -->
+<div class="card mt-3">
+    <div class="card-header">
+        <h3>Today's Activities</h3>
+        <a href="{% url 'activities:log_create' %}" class="btn btn-cyan btn-sm"
+           hx-get="{% url 'activities:log_create' %}" hx-target="#modal-container" hx-swap="innerHTML">
+            + Log Activity
+        </a>
+    </div>
+    {% if today_logs %}
+        {% for log in today_logs %}
+        <div class="log-entry">
+            <div class="log-color-bar" style="background: {{ log.category.color }};"></div>
+            <div class="log-body">
+                <div class="log-title">{{ log.title }}</div>
+                <div class="log-meta">
+                    <span>{{ log.start_time|time:"H:i" }} — {{ log.end_time|time:"H:i" }}</span>
+                    <span class="badge badge-muted">{{ log.category.name }}</span>
+                    {% if log.activity_type %}<span>{{ log.activity_type.name }}</span>{% endif %}
+                    <span>⭐ {{ log.get_productivity_rating_display }}</span>
+                </div>
+                {% if log.description %}<p class="text-muted mt-1" style="font-size:0.82rem;">{{ log.description|truncatewords:20 }}</p>{% endif %}
+            </div>
+            <div class="log-actions">
+                <a href="{% url 'activities:log_edit' log.id %}" class="btn btn-ghost btn-sm"
+                   hx-get="{% url 'activities:log_edit' log.id %}" hx-target="#modal-container">Edit</a>
+            </div>
+        </div>
+        {% endfor %}
+    {% else %}
+        <div class="empty-state">
+            <div class="empty-icon">📝</div>
+            <p>No activities logged yet today. Start logging to build your score!</p>
+            <a href="{% url 'activities:log_create' %}" class="btn btn-cyan">Log Your First Activity</a>
+        </div>
+    {% endif %}
+</div>
+
+<!-- LLM Feedback -->
+{% if today_score and today_score.llm_feedback %}
+<div class="card mt-3">
+    <div class="card-header">
+        <h3 class="text-pink">AI Scrutinizer Feedback</h3>
+        <span class="badge {% if today_score.llm_adjustment >= 0 %}badge-emerald{% else %}badge-danger{% endif %}">
+            {{ today_score.llm_adjustment|floatformat:1 }} pts
+        </span>
+    </div>
+    <div class="llm-feedback">
+        {{ today_score.llm_feedback|linebreaksbr }}
+    </div>
+</div>
+{% endif %}
+
+<!-- Modal Container -->
+<div id="modal-container"></div>

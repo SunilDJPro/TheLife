@@ -1,0 +1,23 @@
+{% load widget_tweaks %}
+<form method="post" action="{% if log %}{% url 'entertainment:edit' log.id %}{% else %}{% url 'entertainment:create' %}{% endif %}">
+    {% csrf_token %}
+    <div class="form-group"><label>Title</label>{{ form.title }}</div>
+    <div class="form-row">
+        <div class="form-group"><label>Type</label>{{ form.entertainment_type }}</div>
+        <div class="form-group"><label>Date</label>{{ form.date }}</div>
+        <div class="form-group"><label>Start Time</label>{{ form.start_time }}</div>
+    </div>
+    <div class="form-row">
+        <div class="form-group"><label>Venue</label>{{ form.venue }}</div>
+        <div class="form-group"><label>Duration (mins)</label>{{ form.duration_minutes }}</div>
+        <div class="form-group"><label>Rating (1-10)</label>{{ form.rating }}</div>
+    </div>
+    <div class="form-group"><label>Description</label>{{ form.description }}</div>
+    <div class="form-group">
+        <label class="flex gap-2 flex-center">{{ form.is_scheduled }} Pre-scheduled</label>
+    </div>
+    <div class="btn-group mt-3">
+        <button type="submit" class="btn btn-pink">{% if log %}Update{% else %}Save{% endif %}</button>
+        <a href="{% url 'entertainment:list' %}" class="btn btn-outline">Cancel</a>
+    </div>
+</form>
