@@ -1,0 +1,68 @@
+{% extends 'base.html' %}
+{% load widget_tweaks %}
+{% block title %}Log: {{ task.title }} — TheLife{% endblock %}
+{% block content %}
+<div class="page-header">
+    <h2>Log Session: {{ task.title }}</h2>
+    <span class="badge badge-cyan">{{ task.get_frequency_display }}</span>
+</div>
+
+<div class="card">
+    <div class="card-header">
+        <h3>
+            <span style="color:{{ task.category.color }};">●</span>
+            {{ task.category.name }}
+            {% if task.activity_type %} → {{ task.activity_type.name }}{% endif %}
+        </h3>
+        <span class="text-muted" style="font-size:0.82rem;">
+            Scheduled: {{ task.start_time|time:"H:i" }} – {{ task.end_time|time:"H:i" }}
+        </span>
+    </div>
+
+    <form method="post" action="{% url 'activities:recurring_log' task.id %}">
+        {% csrf_token %}
+        {% if form.errors %}
+        <div class="alert alert-error">
+            {% for field, errors in form.errors.items %}
+                {{ field }}: {{ errors.0 }}<br>
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        <div class="form-row">
+            <div class="form-group">
+                <label>Category</label>
+                {{ form.category }}
+            </div>
+            <div class="form-group">
+                <label>Type</label>
+                {{ form.activity_type }}
+            </div>
+        </div>
+        <div class="form-row">
+            <div class="form-group"><label>Date</label>{{ form.date }}</div>
+            <div class="form-group"><label>Start Time</label>{{ form.start_time }}</div>
+            <div class="form-group"><label>End Time</label>{{ form.end_time }}</div>
+        </div>
+        <div class="form-group"><label>Title</label>{{ form.title }}</div>
+        <div class="form-group"><label>Description / What you did</label>{{ form.description }}</div>
+        <div class="form-group"><label>Notes / Reflections</label>{{ form.notes }}</div>
+        <div class="form-group"><label>Productivity Rating</label>{{ form.productivity_rating }}</div>
+
+        <!-- Category-specific metadata fields -->
+        {% if meta_template %}
+        <div class="card mt-2" style="background:var(--bg-secondary); border:1px solid var(--border-secondary); padding:12px;">
+            <h4 style="font-size:0.85rem; color:var(--cyan); margin-bottom:8px;">
+                Additional Details ({{ task.category.name }})
+            </h4>
+            {% include meta_template %}
+        </div>
+        {% endif %}
+
+        <div class="btn-group mt-3">
+            <button type="submit" class="btn btn-cyan">Log Session</button>
+            <a href="{% url 'activities:recurring_tasks' %}" class="btn btn-outline">Cancel</a>
+        </div>
+    </form>
+</div>
+{% endblock %}

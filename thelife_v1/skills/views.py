@@ -6,6 +6,7 @@ from django.core.exceptions import ValidationError
 
 from .models import Skill, SkillResource, SkillSession
 from .forms import SkillForm, SkillResourceForm, SkillSessionForm
+from activities.sync import create_activity_from_skill_session
 
 
 @login_required
@@ -39,13 +40,11 @@ def skill_create(request):
         if form.is_valid():
             skill = form.save(commit=False)
             skill.user = request.user
-        try:
-            skill.save()
-            if request.htmx:
-                return redirect('skills:skill_list')
-            return redirect('skills:skill_detail', skill_id=skill.id)
-        except ValidationError as e:
-            form.add_error(None, e.message)
+            try:
+                skill.save()
+                return redirect('skills:skill_detail', skill_id=skill.id)
+            except ValidationError as e:
+                form.add_error(None, e.message)
 
     context = {'form': form, 'is_new': True}
     if request.htmx:
@@ -144,6 +143,16 @@ def session_log(request, resource_id):
         session = form.save(commit=False)
         session.resource = resource
         session.save()
+        # Sync to ActivityLog + trigger scoring
+        create_activity_from_skill_session(request.user, session)
+        try:
+            from scoring.engine import calculate_daily_score, aggregate_weekly_score, aggregate_monthly_score
+            calculate_daily_score(request.user, session.date)
+            year, week, _ = session.date.isocalendar()
+            aggregate_weekly_score(request.user, year, week)
+            aggregate_monthly_score(request.user, session.date.year, session.date.month)
+        except Exception:
+            pass
         if request.htmx:
             sessions = SkillSession.objects.filter(
                 resource__skill=resource.skill
@@ -153,11 +162,16 @@ def session_log(request, resource_id):
         return redirect('skills:skill_detail', skill_id=resource.skill.id)
 
     # Pre-fill with resource-specific fields
+    is_book = resource.resource_type == 'book'
+    has_video = resource.resource_type.startswith('course_')
+    show_sections = not is_book  # All non-book types can track sections
+
     context = {
         'form': form,
         'resource': resource,
-        'is_book': resource.resource_type == 'book',
-        'is_course': resource.resource_type.startswith('course_'),
+        'is_book': is_book,
+        'show_sections': show_sections,
+        'has_video': has_video,
     }
     if request.htmx:
         return render(request, 'skills/partials/session_form.html', context)

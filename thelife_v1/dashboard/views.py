@@ -12,11 +12,33 @@ from scoring.models import DailyScore
 from skills.models import Skill
 
 
+def _backfill_unscored_days(user):
+    """
+    On first load of the day, score any past days that have activity logs
+    but no DailyScore. Covers server-off gaps.
+    Only looks back 7 days to stay fast.
+    """
+    today = timezone.localdate()
+    for i in range(1, 8):
+        day = today - timedelta(days=i)
+        has_logs = ActivityLog.objects.filter(user=user, date=day).exists()
+        has_score = DailyScore.objects.filter(user=user, date=day).exists()
+        if has_logs and not has_score:
+            try:
+                from scoring.engine import calculate_daily_score
+                calculate_daily_score(user, day)
+            except Exception:
+                pass
+
+
 @login_required
 def home(request):
     """Main dashboard with calendar view and catch-up prompts."""
     today = timezone.localdate()
     now = timezone.localtime()
+
+    # Backfill unscored past days (runs once, fast check)
+    _backfill_unscored_days(request.user)
 
     # View mode: day, week, month
     view_mode = request.GET.get('view', 'day')
@@ -38,8 +60,17 @@ def home(request):
     # Unfilled blocks for catch-up prompt
     unfilled_blocks = _get_unfilled_blocks_for_dashboard(request.user, today, today_logs)
 
-    # Today's score
+    # Today's score — compute if activities exist but no score yet
     today_score = DailyScore.objects.filter(user=request.user, date=today).first()
+    if not today_score and today_logs.exists():
+        try:
+            from scoring.engine import calculate_daily_score, aggregate_weekly_score, aggregate_monthly_score
+            today_score = calculate_daily_score(request.user, today)
+            year, week, _ = today.isocalendar()
+            aggregate_weekly_score(request.user, year, week)
+            aggregate_monthly_score(request.user, today.year, today.month)
+        except Exception:
+            pass
 
     # Active skills
     active_skills = Skill.objects.filter(user=request.user, status='active')

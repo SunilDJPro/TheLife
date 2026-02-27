@@ -151,3 +151,104 @@ def create_activity_from_entertainment(user, ent_log):
         },
     )
     return log
+
+
+def create_activity_from_skill_session(user, session):
+    """Create/update an ActivityLog from a SkillSession entry."""
+    category = ActivityCategory.objects.filter(name='Skill Learning').first()
+    if not category:
+        return None
+
+    # Match type based on resource type
+    type_map = {
+        'book': 'Reading',
+        'course_udemy': 'Online Course',
+        'course_coursera': 'Online Course',
+        'course_youtube': 'Online Course',
+        'course_other': 'Online Course',
+        'tutorial': 'Online Course',
+        'practice': 'Practice',
+        'paper': 'Reading',
+        'podcast': 'Online Course',
+        'other': 'Self Study',
+    }
+    type_name = type_map.get(session.resource.resource_type, '')
+    activity_type = ActivityType.objects.filter(
+        category=category, name__icontains=type_name
+    ).first() if type_name else None
+
+    from datetime import datetime, timedelta
+
+    # Build description
+    desc_parts = [
+        f"Skill: {session.resource.skill.name}",
+        f"Resource: {session.resource.title}",
+    ]
+    if session.resource.resource_type == 'book':
+        if session.start_page and session.end_page:
+            desc_parts.append(f"Pages {session.start_page}-{session.end_page} ({session.pages_read} pages)")
+        if session.pages_per_hour:
+            desc_parts.append(f"Reading speed: {session.pages_per_hour} pages/hr")
+    else:
+        if session.sections_covered:
+            desc_parts.append(f"Sections: {session.sections_covered}")
+        if session.video_timestamp_start and session.video_timestamp_end:
+            desc_parts.append(f"Video: {session.video_timestamp_start}-{session.video_timestamp_end}")
+    if session.notes:
+        desc_parts.append(session.notes)
+
+    # Times
+    start_time = session.start_time
+    end_time = session.end_time
+    duration = session.duration_minutes or 60
+
+    if not start_time:
+        start_time = datetime.strptime('09:00', '%H:%M').time()
+    if not end_time:
+        end_dt = datetime.combine(session.date, start_time) + timedelta(minutes=duration)
+        end_time = end_dt.time()
+
+    # Productivity from session rating
+    rating_map = {1: 1, 2: 2, 3: 3, 4: 4, 5: 5}
+    productivity = rating_map.get(session.rating, 3)
+
+    # Check existing
+    existing = ActivityLog.objects.filter(
+        user=user,
+        date=session.date,
+        metadata__contains={'source': 'skill_session', 'source_id': str(session.id)},
+    ).first()
+
+    if existing:
+        existing.title = f"Study: {session.resource.skill.name} - {session.resource.title}"
+        existing.description = '\n'.join(desc_parts)
+        existing.start_time = start_time
+        existing.end_time = end_time
+        existing.duration_minutes = duration
+        existing.productivity_rating = productivity
+        existing.save()
+        return existing
+
+    log = ActivityLog.objects.create(
+        user=user,
+        category=category,
+        activity_type=activity_type,
+        date=session.date,
+        start_time=start_time,
+        end_time=end_time,
+        duration_minutes=duration,
+        title=f"Study: {session.resource.skill.name} - {session.resource.title}",
+        description='\n'.join(desc_parts),
+        productivity_rating=productivity,
+        metadata={
+            'source': 'skill_session',
+            'source_id': str(session.id),
+            'skill_name': session.resource.skill.name,
+            'resource_title': session.resource.title,
+            'resource_type': session.resource.resource_type,
+            'pages_read': session.pages_read,
+            'sections_count': session.sections_count,
+            'rating': session.rating,
+        },
+    )
+    return log

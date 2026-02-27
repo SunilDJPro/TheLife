@@ -1,8 +1,16 @@
 {% load widget_tweaks %}
-<form method="post" action="{% url 'skills:session_log' resource.id %}"
-      hx-post="{% url 'skills:session_log' resource.id %}" hx-target="#session-list" hx-swap="innerHTML">
+<form method="post" action="{% url 'skills:session_log' resource.id %}">
     {% csrf_token %}
-    <h4 style="color:var(--cyan);margin-bottom:12px;">{{ resource.title }}</h4>
+    {% if form.errors %}
+    <div class="alert alert-error">
+        {% for field, errors in form.errors.items %}
+            {{ field }}: {{ errors.0 }}<br>
+        {% endfor %}
+    </div>
+    {% endif %}
+    <h4 style="color:var(--cyan);margin-bottom:12px;">{{ resource.title }}
+        <span class="badge badge-muted" style="font-size:0.7rem;">{{ resource.get_resource_type_display }}</span>
+    </h4>
     <div class="form-row">
         <div class="form-group"><label>Date</label>{{ form.date }}</div>
         <div class="form-group"><label>Start Time</label>{{ form.start_time }}</div>
@@ -14,11 +22,13 @@
         <div class="form-group"><label>End Page</label>{{ form.end_page }}</div>
     </div>
     {% endif %}
-    {% if is_course %}
+    {% if show_sections %}
     <div class="form-row">
         <div class="form-group"><label>Sections Covered</label>{{ form.sections_covered }}</div>
         <div class="form-group"><label>Sections Count</label>{{ form.sections_count }}</div>
     </div>
+    {% endif %}
+    {% if has_video %}
     <div class="form-row">
         <div class="form-group"><label>Video Start Time</label>{{ form.video_timestamp_start }}</div>
         <div class="form-group"><label>Video End Time</label>{{ form.video_timestamp_end }}</div>

@@ -9,11 +9,17 @@
     <a href="{% url 'scoring:history' %}" class="btn btn-outline btn-sm">View History</a>
 </div>
 
-<!-- Today's Score -->
+<!-- Stats -->
 <div class="card-grid card-grid-4 mb-3">
     <div class="stat-card stat-cyan">
-        <div class="stat-value">{{ today_score.final_score|floatformat:0|default:"—" }}</div>
-        <div class="stat-label">Today</div>
+        <div class="stat-value">{{ today_score.base_score|floatformat:0|default:"—" }}</div>
+        <div class="stat-label">Today (Analytics)</div>
+    </div>
+    <div class="stat-card {% if today_score.llm_processed %}stat-emerald{% else %}stat-warning{% endif %}">
+        <div class="stat-value">
+            {% if today_score.llm_processed %}{{ today_score.final_score|floatformat:0 }}{% else %}—{% endif %}
+        </div>
+        <div class="stat-label">Today (Final{% if not today_score.llm_processed %} — AI pending{% endif %})</div>
     </div>
     <div class="stat-card stat-emerald">
         <div class="stat-value">{{ weekly_score.avg_score|floatformat:0|default:"—" }}</div>
@@ -23,13 +29,9 @@
         <div class="stat-value">{{ monthly_score.avg_score|floatformat:0|default:"—" }}</div>
         <div class="stat-label">This Month Avg</div>
     </div>
-    <div class="stat-card stat-warning">
-        <div class="stat-value">{{ today_score.logging_coverage|floatformat:0|default:"0" }}%</div>
-        <div class="stat-label">Coverage</div>
-    </div>
 </div>
 
-<!-- Score Breakdown -->
+<!-- Today's Breakdown -->
 {% if today_score %}
 <div class="card">
     <div class="card-header">
@@ -44,43 +46,109 @@
 </div>
 {% endif %}
 
+<!-- AI Scrutinizer Section -->
+<div class="card mt-3">
+    <div class="card-header">
+        <h3 class="text-pink">🤖 AI Scrutinizer</h3>
+        {% if pending_llm %}
+        <button class="btn btn-pink btn-sm" onclick="runLlmBatch()" id="batch-btn">
+            Run AI on All ({{ pending_llm|length }} days)
+        </button>
+        {% endif %}
+    </div>
+
+    <div id="llm-status-area">
+        {% if today_score and today_score.llm_processed %}
+        <div class="log-entry">
+            <div class="log-color-bar" style="background:var(--emerald);"></div>
+            <div class="log-body">
+                <div class="log-title">Today — AI Scored ✓</div>
+                <div class="log-meta">
+                    <span class="badge {% if today_score.llm_adjustment >= 0 %}badge-emerald{% else %}badge-danger{% endif %}">
+                        {% if today_score.llm_adjustment >= 0 %}+{% endif %}{{ today_score.llm_adjustment|floatformat:1 }}
+                    </span>
+                    <span>Final: {{ today_score.final_score|floatformat:0 }}</span>
+                </div>
+                {% if today_score.llm_feedback %}
+                <div class="llm-feedback mt-2">{{ today_score.llm_feedback|linebreaksbr }}</div>
+                {% endif %}
+            </div>
+        </div>
+        {% elif today_score %}
+        <div class="log-entry">
+            <div class="log-color-bar" style="background:var(--warning);"></div>
+            <div class="log-body">
+                <div class="log-title">Today — Analytics Only (AI not run)</div>
+                <div class="log-meta">
+                    <span>Base: {{ today_score.base_score|floatformat:0 }}</span>
+                    <span>{{ today_score.total_activities }} activities</span>
+                </div>
+            </div>
+            <button class="btn btn-pink btn-sm" onclick="runLlmSingle('{{ today_score.date|date:'Y-m-d' }}', this)">
+                Run AI
+            </button>
+        </div>
+        {% endif %}
+
+        {% if pending_llm %}
+        <div style="padding:8px 0 4px; font-size:0.78rem; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.5px;">
+            Pending AI Review
+        </div>
+        {% for s in pending_llm %}
+        <div class="log-entry" id="llm-row-{{ s.date|date:'Y-m-d' }}">
+            <div class="log-color-bar" style="background:var(--warning);"></div>
+            <div class="log-body">
+                <div class="log-title">{{ s.date|date:"D, M d" }}</div>
+                <div class="log-meta">
+                    <span>Base: {{ s.base_score|floatformat:0 }}</span>
+                    <span>{{ s.total_activities }} activities</span>
+                    <span>{{ s.total_logged_hours|floatformat:1 }}h</span>
+                </div>
+                <div class="llm-result-msg text-muted" style="font-size:0.8rem; display:none;"></div>
+            </div>
+            <button class="btn btn-pink btn-sm llm-single-btn" onclick="runLlmSingle('{{ s.date|date:'Y-m-d' }}', this)">
+                Run AI
+            </button>
+        </div>
+        {% endfor %}
+        {% elif not today_score or today_score.llm_processed %}
+        <p class="text-muted" style="font-size:0.85rem; padding-top:8px;">All caught up — no pending AI reviews.</p>
+        {% endif %}
+    </div>
+</div>
+
 <!-- Score Chart -->
 <div class="card mt-3">
     <div class="card-header"><h3>30-Day Trend</h3></div>
     <canvas id="scoreChart" height="80"></canvas>
 </div>
 
-<!-- LLM Feedback -->
-{% if today_score and today_score.llm_feedback %}
-<div class="card mt-3">
-    <div class="card-header">
-        <h3 class="text-pink">AI Scrutinizer Says...</h3>
-        <span class="badge {% if today_score.llm_adjustment >= 0 %}badge-emerald{% else %}badge-danger{% endif %}">
-            {% if today_score.llm_adjustment >= 0 %}+{% endif %}{{ today_score.llm_adjustment|floatformat:1 }}
-        </span>
-    </div>
-    <div class="llm-feedback">{{ today_score.llm_feedback|linebreaksbr }}</div>
-</div>
-{% endif %}
-
-<!-- Recent Scores -->
+<!-- Last 7 Days -->
 <div class="card mt-3">
     <div class="card-header"><h3>Last 7 Days</h3></div>
     {% for s in recent_scores %}
     <div class="log-entry">
         <div class="log-body">
             <div class="flex-between">
-                <div class="log-title">{{ s.date|date:"D, M d" }}</div>
-                <div style="font-size:1.3rem;font-weight:700;" class="{% if s.final_score >= 70 %}text-emerald{% elif s.final_score >= 40 %}text-cyan{% else %}text-danger{% endif %}">
-                    {{ s.final_score|floatformat:0 }}
+                <a href="{% url 'scoring:detail' s.date|date:'Y-m-d' %}" class="log-title" style="color:var(--text-white);">{{ s.date|date:"D, M d" }}</a>
+                <div>
+                    <span style="font-size:1.1rem;font-weight:700;" class="{% if s.final_score >= 70 %}text-emerald{% elif s.final_score >= 40 %}text-cyan{% else %}text-danger{% endif %}">
+                        {{ s.final_score|floatformat:0 }}
+                    </span>
+                    {% if s.llm_processed %}
+                        <span class="badge badge-emerald" style="font-size:0.65rem;">AI ✓</span>
+                    {% else %}
+                        <span class="badge badge-muted" style="font-size:0.65rem;">Analytics</span>
+                    {% endif %}
                 </div>
             </div>
             <div class="log-meta">
                 <span>Work: {{ s.work_score|floatformat:0 }}</span>
                 <span>Skills: {{ s.skill_score|floatformat:0 }}</span>
                 <span>Fitness: {{ s.fitness_score|floatformat:0 }}</span>
-                <span>{{ s.total_logged_hours|floatformat:1 }}h logged</span>
-                {% if s.llm_adjustment %}<span class="{% if s.llm_adjustment >= 0 %}text-emerald{% else %}text-danger{% endif %}">LLM: {% if s.llm_adjustment >= 0 %}+{% endif %}{{ s.llm_adjustment|floatformat:1 }}</span>{% endif %}
+                <span>{{ s.total_logged_hours|floatformat:1 }}h</span>
+                <span>{{ s.logging_coverage|floatformat:0 }}%</span>
+                {% if s.llm_adjustment %}<span class="{% if s.llm_adjustment >= 0 %}text-emerald{% else %}text-danger{% endif %}">AI: {% if s.llm_adjustment >= 0 %}+{% endif %}{{ s.llm_adjustment|floatformat:1 }}</span>{% endif %}
             </div>
         </div>
     </div>
@@ -90,6 +158,7 @@
 </div>
 
 <script>
+// Chart
 document.addEventListener('DOMContentLoaded', function() {
     const ctx = document.getElementById('scoreChart');
     if (!ctx) return;
@@ -104,15 +173,13 @@ document.addEventListener('DOMContentLoaded', function() {
                 data: data.scores,
                 borderColor: '#00BCD4',
                 backgroundColor: 'rgba(0,188,212,0.1)',
-                fill: true,
-                tension: 0.3,
+                fill: true, tension: 0.3,
             }, {
                 label: 'Base Score',
                 data: data.base_scores,
                 borderColor: '#666',
                 borderDash: [5, 5],
-                fill: false,
-                tension: 0.3,
+                fill: false, tension: 0.3,
             }]
         },
         options: {
@@ -125,5 +192,106 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 });
+
+// LLM single-date trigger
+function runLlmSingle(dateStr, btn) {
+    btn.disabled = true;
+    btn.textContent = 'Running...';
+    btn.classList.add('btn-outline');
+    btn.classList.remove('btn-pink');
+
+    const row = document.getElementById('llm-row-' + dateStr) || btn.closest('.log-entry');
+    const msgEl = row ? row.querySelector('.llm-result-msg') : null;
+
+    fetch('{% url "scoring:llm_score" %}', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+            'X-CSRFToken': '{{ csrf_token }}',
+        },
+        body: 'date=' + dateStr,
+    })
+    .then(r => r.json())
+    .then(data => {
+        if (data.status === 'success') {
+            btn.textContent = '✓ Done';
+            btn.classList.remove('btn-outline');
+            btn.classList.add('btn-emerald');
+            if (row) {
+                const bar = row.querySelector('.log-color-bar');
+                if (bar) bar.style.background = 'var(--emerald)';
+            }
+            if (msgEl) {
+                msgEl.style.display = 'block';
+                msgEl.innerHTML = '<span class="text-emerald">AI: ' +
+                    (data.adjustment >= 0 ? '+' : '') + data.adjustment.toFixed(1) +
+                    '</span> → Final: ' + data.final_score.toFixed(0) +
+                    '<br>' + data.feedback.substring(0, 150);
+            }
+        } else if (data.status === 'already_done') {
+            btn.textContent = '✓ Already done';
+            btn.classList.add('btn-emerald');
+        } else {
+            btn.textContent = '✗ Failed';
+            btn.classList.add('btn-outline');
+            if (msgEl) {
+                msgEl.style.display = 'block';
+                msgEl.className = 'llm-result-msg text-danger';
+                msgEl.textContent = data.message;
+            }
+            btn.disabled = false;
+        }
+    })
+    .catch(err => {
+        btn.textContent = '✗ Error';
+        if (msgEl) { msgEl.style.display = 'block'; msgEl.textContent = 'Network error'; }
+        btn.disabled = false;
+    });
+}
+
+// LLM batch trigger
+function runLlmBatch() {
+    const btn = document.getElementById('batch-btn');
+    btn.disabled = true;
+    btn.textContent = 'Running all...';
+
+    fetch('{% url "scoring:llm_batch" %}', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+            'X-CSRFToken': '{{ csrf_token }}',
+        },
+        body: '',
+    })
+    .then(r => r.json())
+    .then(data => {
+        btn.textContent = '✓ Done (' + data.processed + ' scored)';
+        btn.classList.remove('btn-pink');
+        btn.classList.add('btn-emerald');
+        // Update individual rows
+        if (data.results) {
+            data.results.forEach(r => {
+                const row = document.getElementById('llm-row-' + r.date);
+                if (row) {
+                    const bar = row.querySelector('.log-color-bar');
+                    const rbtn = row.querySelector('.llm-single-btn');
+                    const msgEl = row.querySelector('.llm-result-msg');
+                    if (r.status === 'success') {
+                        if (bar) bar.style.background = 'var(--emerald)';
+                        if (rbtn) { rbtn.textContent = '✓'; rbtn.disabled = true; rbtn.classList.add('btn-emerald'); }
+                        if (msgEl) { msgEl.style.display = 'block'; msgEl.innerHTML = 'AI: ' + (r.adjustment >= 0 ? '+' : '') + r.adjustment.toFixed(1) + ' — ' + r.feedback; }
+                    } else {
+                        if (bar) bar.style.background = 'var(--danger)';
+                        if (msgEl) { msgEl.style.display = 'block'; msgEl.className = 'llm-result-msg text-danger'; msgEl.textContent = r.feedback; }
+                    }
+                }
+            });
+        }
+    })
+    .catch(() => {
+        btn.textContent = '✗ Error';
+        btn.disabled = false;
+    });
+}
 </script>
 {% endblock %}

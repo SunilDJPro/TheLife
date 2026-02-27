@@ -1,7 +1,5 @@
 {% load widget_tweaks %}
-<form method="post" action="{% if log %}{% url 'activities:log_edit' log.id %}{% else %}{% url 'activities:log_create' %}{% endif %}"
-      hx-post="{% if log %}{% url 'activities:log_edit' log.id %}{% else %}{% url 'activities:log_create' %}{% endif %}"
-      hx-target="#log-list-area" hx-swap="innerHTML">
+<form method="post" action="{% if log %}{% url 'activities:log_edit' log.id %}{% else %}{% url 'activities:log_create' %}{% endif %}">
     {% csrf_token %}
     {% if form.errors %}
     <div class="alert alert-error">Please fix the errors below.</div>

@@ -13,5 +13,6 @@ urlpatterns = [
     path('search/', views.search_activities, name='search'),
     path('metadata-form/', views.get_metadata_form, name='metadata_form'),
     path('recurring/', views.recurring_task_list, name='recurring_tasks'),
+    path('recurring/<uuid:task_id>/log/', views.recurring_task_log, name='recurring_log'),
     path('recurring/<uuid:task_id>/delete/', views.recurring_task_delete, name='recurring_delete'),
 ]

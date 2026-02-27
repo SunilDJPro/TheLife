@@ -14,6 +14,19 @@ from .models import ActivityLog, ActivityCategory, ActivityType, RecurringTask
 from .forms import ActivityLogForm, QuickLogForm, RecurringTaskForm
 
 
+def _trigger_daily_score(user, date):
+    """Trigger analytical scoring after any activity log change. Lightweight, no LLM."""
+    try:
+        from scoring.engine import calculate_daily_score, aggregate_weekly_score, aggregate_monthly_score
+        calculate_daily_score(user, date)
+        # Also update weekly/monthly aggregates
+        year, week, _ = date.isocalendar()
+        aggregate_weekly_score(user, year, week)
+        aggregate_monthly_score(user, date.year, date.month)
+    except Exception:
+        pass  # Never break the log save flow
+
+
 @login_required
 def activity_log_list(request):
     """List all activity logs for a given date."""
@@ -61,6 +74,7 @@ def activity_log_create(request):
         if metadata:
             log.metadata = metadata
         log.save()
+        _trigger_daily_score(request.user, log.date)  # Auto-score
 
         if request.htmx:
             logs = ActivityLog.objects.filter(
@@ -104,6 +118,7 @@ def activity_log_edit(request, log_id):
         if metadata:
             log.metadata = metadata
         log.save()
+        _trigger_daily_score(request.user, log.date)  # Auto-score
 
         if request.htmx:
             logs = ActivityLog.objects.filter(
@@ -129,6 +144,7 @@ def activity_log_delete(request, log_id):
     log = get_object_or_404(ActivityLog, id=log_id, user=request.user)
     date = log.date
     log.delete()
+    _trigger_daily_score(request.user, date)  # Re-score after delete
 
     if request.htmx:
         logs = ActivityLog.objects.filter(
@@ -269,6 +285,66 @@ def recurring_task_list(request):
     if request.htmx:
         return render(request, 'activities/partials/recurring_list.html', context)
     return render(request, 'activities/recurring_tasks.html', context)
+
+
+@login_required
+def recurring_task_log(request, task_id):
+    """Log a session from a recurring task — pre-fills form, saves as ActivityLog."""
+    task = get_object_or_404(RecurringTask, id=task_id, user=request.user)
+    today = timezone.localdate()
+    now = timezone.localtime()
+
+    initial = {
+        'category': task.category_id,
+        'activity_type': task.activity_type_id,
+        'date': today,
+        'start_time': task.start_time,
+        'end_time': task.end_time,
+        'title': task.title,
+        'description': task.description,
+    }
+
+    form = ActivityLogForm(request.POST or None, initial=initial)
+    # Ensure activity_type queryset is correct for the pre-selected category
+    if task.category_id:
+        form.fields['activity_type'].queryset = ActivityType.objects.filter(
+            category=task.category, is_active=True)
+
+    if request.method == 'POST' and form.is_valid():
+        log = form.save(commit=False)
+        log.user = request.user
+        log.is_recurring = True
+        # Handle metadata from category-specific fields
+        metadata = {'source': 'recurring_task', 'recurring_task_id': str(task.id)}
+        for key in request.POST:
+            if key.startswith('meta_'):
+                metadata[key[5:]] = request.POST[key]
+        log.metadata = metadata
+        log.save()
+        _trigger_daily_score(request.user, log.date)
+        return redirect('activities:recurring_tasks')
+
+    # Determine which metadata template to show based on category
+    meta_template = _get_metadata_template_name(task.category.name)
+
+    context = {
+        'form': form,
+        'task': task,
+        'is_recurring_log': True,
+        'meta_template': meta_template,
+        'is_new': True,
+    }
+    return render(request, 'activities/recurring_log.html', context)
+
+
+def _get_metadata_template_name(category_name):
+    """Return the metadata partial template name for a given category."""
+    mapping = {
+        'Fitness': 'activities/partials/metadata_fitness.html',
+        'Meals & Nutrition': 'activities/partials/metadata_meals.html',
+        'Commute & Travel': 'activities/partials/metadata_commute.html',
+    }
+    return mapping.get(category_name, '')
 
 
 @login_required

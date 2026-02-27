@@ -133,6 +133,15 @@ def work_log_create(request):
         log.user = request.user
         log.save()
         create_activity_from_work_log(request.user, log)
+        # Trigger analytical scoring + aggregates
+        try:
+            from scoring.engine import calculate_daily_score, aggregate_weekly_score, aggregate_monthly_score
+            calculate_daily_score(request.user, log.date)
+            year, week, _ = log.date.isocalendar()
+            aggregate_weekly_score(request.user, year, week)
+            aggregate_monthly_score(request.user, log.date.year, log.date.month)
+        except Exception:
+            pass
         if request.htmx:
             recent_logs = WorkLog.objects.filter(user=request.user)[:10]
             return render(request, 'work/partials/work_log_list.html', {'logs': recent_logs})

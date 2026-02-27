@@ -74,6 +74,7 @@ class SkillResource(models.Model):
         ('course_coursera', 'Online Course (Coursera)'),
         ('course_udemy', 'Online Course (Udemy)'),
         ('course_youtube', 'Online Course (YouTube)'),
+        ('course_other', 'Online Course (Other)'),
         ('tutorial', 'Tutorial / Blog'),
         ('practice', 'Practice / Hands-on'),
         ('podcast', 'Podcast / Audio'),
