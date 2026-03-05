@@ -254,13 +254,8 @@ Your task:
 3. Provide a score adjustment between -30 and +30 points.
 4. Be stern but constructive — the goal is accountability, not demoralization.
 
-Respond in this exact JSON format:
-{{
-    "adjustment": <number between -30 and 30>,
-    "feedback": "<2-3 sentences of direct, honest feedback>",
-    "highlights": "<what they did well>",
-    "improvements": "<what they should improve>"
-}}"""
+RESPOND WITH ONLY THIS JSON — no markdown fences, no explanation before or after:
+{{"adjustment": 0, "feedback": "your feedback here", "highlights": "what they did well", "improvements": "what to improve"}}"""
 
         response = litellm.completion(
             model=settings.LLM_MODEL,
@@ -268,18 +263,65 @@ Respond in this exact JSON format:
             api_base=settings.OLLAMA_BASE_URL,
             temperature=0.3,
             max_tokens=500,
+            response_format={"type": "json_object"},
         )
 
         result_text = response.choices[0].message.content.strip()
 
-        # Parse JSON response
-        # Try to extract JSON from the response
+        # Robust JSON extraction — LLMs often wrap in markdown fences or add preamble
         import re
-        json_match = re.search(r'\{.*\}', result_text, re.DOTALL)
-        if json_match:
-            result = json.loads(json_match.group())
-        else:
-            result = json.loads(result_text)
+        result = None
+
+        # Strategy 1: Strip markdown code fences
+        cleaned = re.sub(r'```(?:json)?\s*', '', result_text).strip()
+        cleaned = re.sub(r'```\s*$', '', cleaned).strip()
+
+        # Strategy 2: Find outermost JSON object with brace matching
+        def extract_json_object(text):
+            start = text.find('{')
+            if start == -1:
+                return None
+            depth = 0
+            for i in range(start, len(text)):
+                if text[i] == '{':
+                    depth += 1
+                elif text[i] == '}':
+                    depth -= 1
+                    if depth == 0:
+                        return text[start:i + 1]
+            return None
+
+        # Try cleaned text first, then raw
+        for attempt in [cleaned, result_text]:
+            if result:
+                break
+            json_str = extract_json_object(attempt)
+            if json_str:
+                try:
+                    result = json.loads(json_str)
+                except json.JSONDecodeError:
+                    # Try fixing common issues: trailing commas, single quotes
+                    fixed = re.sub(r',\s*}', '}', json_str)
+                    fixed = re.sub(r',\s*]', ']', fixed)
+                    try:
+                        result = json.loads(fixed)
+                    except json.JSONDecodeError:
+                        continue
+
+        # Strategy 3: If all parsing fails, extract what we can from plain text
+        if not result:
+            logger.warning(f"LLM JSON parse failed for {user} on {date}. Raw: {result_text[:300]}")
+            # Try to salvage a numeric adjustment from the text
+            adj_match = re.search(r'"?adjustment"?\s*[:=]\s*(-?\d+(?:\.\d+)?)', result_text)
+            adjustment = float(adj_match.group(1)) if adj_match else 0
+            adjustment = max(-30, min(30, adjustment))
+
+            score.llm_adjustment = adjustment
+            score.llm_feedback = f"AI reviewed (partial parse):\n{result_text[:300]}"
+            score.final_score = max(0, min(100, score.base_score + adjustment))
+            score.llm_processed = True
+            score.save()
+            return score
 
         adjustment = max(-30, min(30, float(result.get('adjustment', 0))))
         feedback_parts = []

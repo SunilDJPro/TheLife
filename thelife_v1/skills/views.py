@@ -164,13 +164,11 @@ def session_log(request, resource_id):
     # Pre-fill with resource-specific fields
     is_book = resource.resource_type == 'book'
     has_video = resource.resource_type.startswith('course_')
-    show_sections = not is_book  # All non-book types can track sections
 
     context = {
         'form': form,
         'resource': resource,
         'is_book': is_book,
-        'show_sections': show_sections,
         'has_video': has_video,
     }
     if request.htmx:

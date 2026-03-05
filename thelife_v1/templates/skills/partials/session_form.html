@@ -22,12 +22,10 @@
         <div class="form-group"><label>End Page</label>{{ form.end_page }}</div>
     </div>
     {% endif %}
-    {% if show_sections %}
     <div class="form-row">
         <div class="form-group"><label>Sections Covered</label>{{ form.sections_covered }}</div>
         <div class="form-group"><label>Sections Count</label>{{ form.sections_count }}</div>
     </div>
-    {% endif %}
     {% if has_video %}
     <div class="form-row">
         <div class="form-group"><label>Video Start Time</label>{{ form.video_timestamp_start }}</div>

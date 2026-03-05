@@ -32,6 +32,10 @@ class SkillResourceForm(forms.ModelForm):
 
 
 class SkillSessionForm(forms.ModelForm):
+    # sections_count is only relevant for courses/non-book resources.
+    # The template hides it for books, so the form must not require it.
+    sections_count = forms.IntegerField(min_value=0, required=False)
+
     class Meta:
         model = SkillSession
         fields = ['date', 'start_time', 'end_time',
@@ -55,3 +59,7 @@ class SkillSessionForm(forms.ModelForm):
             'notes': forms.Textarea(attrs={'class': 'form-input', 'rows': 3}),
             'rating': forms.Select(attrs={'class': 'form-input'}),
         }
+
+    def clean_sections_count(self):
+        """Default to 0 when not provided (e.g., book sessions)."""
+        return self.cleaned_data.get('sections_count') or 0
