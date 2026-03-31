@@ -35,6 +35,7 @@ INSTALLED_APPS = [
     'skills.apps.SkillsConfig',
     'entertainment.apps.EntertainmentConfig',
     'scoring.apps.ScoringConfig',
+    'compute_mastery.apps.ComputeMasteryConfig',
 ]
 
 MIDDLEWARE = [
@@ -133,6 +134,7 @@ CELERY_BEAT_SCHEDULER = 'django_celery_beat.schedulers:DatabaseScheduler'
 # Ollama / LiteLLM
 OLLAMA_BASE_URL = os.getenv('OLLAMA_BASE_URL', 'http://localhost:11434')
 LLM_MODEL = os.getenv('LLM_MODEL', 'ollama/gemma3:12b')
+COMPUTE_LLM_MODEL = os.getenv('COMPUTE_LLM_MODEL', 'ollama/qwen2.5-coder:14b')
 
 # VAPID keys for push notifications
 VAPID_PUBLIC_KEY = os.getenv('VAPID_PUBLIC_KEY', '')

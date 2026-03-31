@@ -1,0 +1,17 @@
+[Unit]
+Description=Compute Mastery Judge Daemon
+After=redis-server.service postgresql.service
+Requires=redis-server.service
+
+[Service]
+Type=simple
+User=smtai
+WorkingDirectory=/home/smtai/TheLife/thelife_v1
+ExecStart=/home/smtai/TheLife/thelife_v1/venv/bin/python manage.py run_judge
+Restart=on-failure
+RestartSec=5
+Nice=-20
+Environment=DJANGO_SETTINGS_MODULE=thelife.settings
+
+[Install]
+WantedBy=multi-user.target

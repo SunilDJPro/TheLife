@@ -1,0 +1,114 @@
+{% extends "base.html" %}
+{% load mastery_tags %}
+
+{% block title %}Solutions — {{ problem.title }} — Compute Mastery{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div class="flex gap-2" style="align-items: center;">
+        <a href="{% url 'compute_mastery:problem_detail' slug=problem.slug %}" class="btn btn-ghost btn-sm">&larr;</a>
+        <h2>Solutions: {{ problem.title }}</h2>
+    </div>
+    {% if solutions|length >= 2 %}
+    <form id="compare-form" method="get" action="{% url 'compute_mastery:solution_compare' slug=problem.slug %}" class="flex gap-1" style="align-items: center;">
+        <button type="submit" class="btn btn-outline btn-sm" id="compare-btn" disabled>Compare Selected</button>
+    </form>
+    {% endif %}
+</div>
+
+{% if solutions %}
+<div class="card">
+    <table>
+        <thead>
+            <tr>
+                {% if solutions|length >= 2 %}<th style="width: 40px;">Cmp</th>{% endif %}
+                <th>Version</th>
+                <th>Status</th>
+                <th>Median Runtime</th>
+                <th>Instructions</th>
+                <th>IPC</th>
+                <th>Flags</th>
+                <th>Notes</th>
+                <th>Created</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for sol in solutions %}
+            <tr>
+                {% if solutions|length >= 2 %}
+                <td>
+                    <input type="checkbox" class="compare-check form-checkbox"
+                           value="{{ sol.id }}" form="compare-form" name="v">
+                </td>
+                {% endif %}
+                <td>
+                    <span class="text-cyan">v{{ sol.version }}</span>
+                </td>
+                <td>
+                    {% if sol.is_accepted %}
+                    <span class="badge badge-emerald">Accepted</span>
+                    {% elif sol.is_accepted == False %}
+                    <span class="badge badge-danger">Failed</span>
+                    {% else %}
+                    <span class="badge badge-muted">Pending</span>
+                    {% endif %}
+                </td>
+                <td class="text-cyan">{{ sol.median_runtime_us|fmt_runtime }}</td>
+                <td class="text-secondary">
+                    {% if sol.perf_counters.instructions %}
+                    {{ sol.perf_counters.instructions|fmt_count }}
+                    {% else %}—{% endif %}
+                </td>
+                <td class="text-secondary">
+                    {% if sol.perf_counters.ipc %}
+                    {{ sol.perf_counters.ipc }}
+                    {% else %}—{% endif %}
+                </td>
+                <td class="text-muted" style="font-size: 0.8rem;">
+                    {{ sol.compiler_flags }}{% if sol.custom_flags %} {{ sol.custom_flags }}{% endif %}
+                </td>
+                <td class="text-secondary" style="font-size: 0.85rem;">{{ sol.notes|truncatewords:10 }}</td>
+                <td class="text-muted" style="font-size: 0.8rem;">{{ sol.created_at|date:"M d, H:i" }}</td>
+            </tr>
+            {% if sol.llm_analysis %}
+            <tr>
+                <td {% if solutions|length >= 2 %}colspan="10"{% else %}colspan="9"{% endif %}
+                    style="padding: 8px 16px; background: var(--surface-1); border-top: none;">
+                    <details>
+                        <summary class="text-cyan" style="cursor: pointer; font-size: 0.8rem;">AI Analysis (v{{ sol.version }})</summary>
+                        <div class="mastery-description mt-1" style="font-size: 0.85rem;">
+                            {{ sol.llm_analysis|md|safe }}
+                        </div>
+                    </details>
+                </td>
+            </tr>
+            {% endif %}
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+{% if solutions|length >= 2 %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const checks = document.querySelectorAll('.compare-check');
+    const btn = document.getElementById('compare-btn');
+    checks.forEach(c => c.addEventListener('change', () => {
+        const selected = document.querySelectorAll('.compare-check:checked').length;
+        btn.disabled = selected < 2;
+        btn.textContent = selected >= 2 ? `Compare ${selected} Versions` : 'Compare Selected';
+    }));
+});
+</script>
+{% endif %}
+
+{% else %}
+<div class="card">
+    <div class="empty-state">
+        <div class="empty-icon">v0</div>
+        <p>No solutions submitted yet.</p>
+        <a href="{% url 'compute_mastery:problem_detail' slug=problem.slug %}" class="btn btn-cyan btn-sm mt-2">Go to Editor</a>
+    </div>
+</div>
+{% endif %}
+{% endblock %}

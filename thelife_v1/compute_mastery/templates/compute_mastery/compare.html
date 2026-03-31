@@ -1,0 +1,93 @@
+{% extends "base.html" %}
+{% load mastery_tags static %}
+
+{% block title %}Compare Solutions — {{ problem.title }} — Compute Mastery{% endblock %}
+
+{% block extra_head %}
+<link rel="stylesheet" href="{% static 'compute_mastery/styles.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div class="flex gap-2" style="align-items: center;">
+        <a href="{% url 'compute_mastery:solution_list' slug=problem.slug %}" class="btn btn-ghost btn-sm">&larr;</a>
+        <h2>Compare: {{ problem.title }}</h2>
+    </div>
+</div>
+
+{% if comparison %}
+<!-- Perf Comparison Table -->
+<div class="card mb-3">
+    <div class="card-header"><h3>Performance Comparison</h3></div>
+    <table class="mt-2">
+        <thead>
+            <tr>
+                <th>Metric</th>
+                {% for item in comparison %}
+                <th>v{{ item.solution.version }}{% if item.solution.notes %} ({{ item.solution.notes|truncatewords:5 }}){% endif %}</th>
+                {% endfor %}
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td class="text-secondary">Median Runtime</td>
+                {% for item in comparison %}
+                <td class="text-cyan">{{ item.perf.median_us|fmt_runtime }}</td>
+                {% endfor %}
+            </tr>
+            <tr>
+                <td class="text-secondary">Instructions</td>
+                {% for item in comparison %}
+                <td>{{ item.perf.instructions|fmt_count }}</td>
+                {% endfor %}
+            </tr>
+            <tr>
+                <td class="text-secondary">Cycles</td>
+                {% for item in comparison %}
+                <td>{{ item.perf.cycles|fmt_count }}</td>
+                {% endfor %}
+            </tr>
+            <tr>
+                <td class="text-secondary">IPC</td>
+                {% for item in comparison %}
+                <td>{% if item.perf.ipc %}{{ item.perf.ipc|floatformat:2 }}{% else %}—{% endif %}</td>
+                {% endfor %}
+            </tr>
+            <tr>
+                <td class="text-secondary">Cache Misses</td>
+                {% for item in comparison %}
+                <td>{{ item.perf.cache_misses|fmt_count }}</td>
+                {% endfor %}
+            </tr>
+            <tr>
+                <td class="text-secondary">Branch Misses</td>
+                {% for item in comparison %}
+                <td>{{ item.perf.branch_misses|fmt_count }}</td>
+                {% endfor %}
+            </tr>
+        </tbody>
+    </table>
+</div>
+
+<!-- Code Side-by-Side -->
+<div class="card-grid-{{ comparison|length }}">
+    {% for item in comparison %}
+    <div class="card">
+        <div class="card-header">
+            <h3>v{{ item.solution.version }}</h3>
+            <span class="text-muted" style="font-size: 0.8rem;">
+                {{ item.solution.compiler_flags }}{% if item.solution.custom_flags %} {{ item.solution.custom_flags }}{% endif %}
+            </span>
+        </div>
+        <pre class="mastery-code mt-1">{{ item.code }}</pre>
+    </div>
+    {% endfor %}
+</div>
+{% else %}
+<div class="card">
+    <div class="empty-state">
+        <p>Select at least 2 solution versions to compare.</p>
+    </div>
+</div>
+{% endif %}
+{% endblock %}

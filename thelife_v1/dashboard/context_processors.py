@@ -38,6 +38,12 @@ def sidebar_context(request):
             'active_prefix': '/entertainment/',
         },
         {
+            'label': 'Compute Mastery',
+            'url': '/mastery/',
+            'icon': 'terminal',
+            'active_prefix': '/mastery/',
+        },
+        {
             'label': 'Scores',
             'url': '/scoring/',
             'icon': 'trophy',

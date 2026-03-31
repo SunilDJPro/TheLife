@@ -1,0 +1,156 @@
+{% extends "base.html" %}
+{% load mastery_tags static %}
+
+{% block title %}{{ problem.title }} — Compute Mastery{% endblock %}
+
+{% block extra_head %}
+<link rel="stylesheet" href="{% static 'compute_mastery/styles.css' %}">
+<!-- CodeMirror 6 via CDN -->
+<script type="module" src="{% static 'compute_mastery/editor.js' %}"></script>
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div class="flex gap-2" style="align-items: center;">
+        <a href="{% url 'compute_mastery:problem_list' %}" class="btn btn-ghost btn-sm">&larr;</a>
+        <h2>{{ problem.title }}</h2>
+        <span class="badge {% if problem.difficulty == 'easy' %}badge-emerald{% elif problem.difficulty == 'medium' %}badge-warning{% else %}badge-danger{% endif %}">
+            {{ problem.get_difficulty_display }}
+        </span>
+    </div>
+    <div class="flex gap-1">
+        <a href="{% url 'compute_mastery:solution_list' slug=problem.slug %}" class="btn btn-outline btn-sm">
+            Solutions ({{ problem.solution_count }})
+        </a>
+        <a href="{% url 'compute_mastery:problem_edit' slug=problem.slug %}" class="btn btn-ghost btn-sm">Edit</a>
+        <a href="{% url 'compute_mastery:test_case_manage' slug=problem.slug %}" class="btn btn-ghost btn-sm">Test Cases</a>
+    </div>
+</div>
+
+<!-- Main workspace: two-panel layout -->
+<div class="mastery-workspace">
+    <!-- LEFT: Problem Statement -->
+    <div class="mastery-panel mastery-statement">
+        <div class="card">
+            <div class="card-header">
+                <h3>Problem Statement</h3>
+                <div class="flex gap-1">
+                    {% for tag in problem.tags.all %}
+                    <span class="badge badge-muted">{{ tag.name }}</span>
+                    {% endfor %}
+                </div>
+            </div>
+            <div class="mastery-description mt-2">
+                {{ problem.description|md|safe }}
+            </div>
+
+            {% if problem.constraints %}
+            <div class="mt-3">
+                <h4 class="text-secondary" style="font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 8px;">Constraints</h4>
+                <pre class="mastery-pre">{{ problem.constraints }}</pre>
+            </div>
+            {% endif %}
+
+            {% if sample_tests %}
+            <div class="mt-3">
+                <h4 class="text-secondary" style="font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 8px;">Sample Test Cases</h4>
+                {% for tc in sample_tests %}
+                <div class="mastery-sample">
+                    <div class="mastery-sample-half">
+                        <div class="text-muted" style="font-size: 0.7rem; margin-bottom: 4px;">Input</div>
+                        <pre class="mastery-pre">{{ tc.input_data }}</pre>
+                    </div>
+                    <div class="mastery-sample-half">
+                        <div class="text-muted" style="font-size: 0.7rem; margin-bottom: 4px;">Output</div>
+                        <pre class="mastery-pre">{{ tc.expected_output }}</pre>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            {% endif %}
+
+            {% if problem.hints %}
+            <details class="mt-3">
+                <summary class="text-cyan" style="cursor: pointer; font-size: 0.85rem;">Show Hints</summary>
+                <div class="mt-1 text-secondary" style="font-size: 0.88rem;">
+                    {{ problem.hints|md|safe }}
+                </div>
+            </details>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- RIGHT: Code Editor + Results -->
+    <div class="mastery-panel mastery-editor-panel">
+        <!-- Editor Toolbar -->
+        <div class="card" style="padding: 10px 16px;">
+            <div class="flex gap-2" style="flex-wrap: wrap; align-items: center;">
+                <select id="compiler-flags" class="form-input" style="max-width: 120px;">
+                    <option value="-O0">-O0</option>
+                    <option value="-O2" selected>-O2</option>
+                    <option value="-O3">-O3</option>
+                    <option value="-Ofast">-Ofast</option>
+                </select>
+                <input type="text" id="custom-flags" class="form-input"
+                       placeholder="-mavx2 -fopenmp -march=native"
+                       style="max-width: 260px;">
+                <div style="flex: 1;"></div>
+                <button id="run-btn" class="btn btn-outline btn-sm">Run (Samples)</button>
+                <button id="submit-btn" class="btn btn-cyan btn-sm">Submit</button>
+            </div>
+        </div>
+
+        <!-- Code Editor -->
+        <div class="card mt-1" style="padding: 0; overflow: hidden;">
+            <div id="code-editor" style="min-height: 400px;"></div>
+        </div>
+
+        <!-- Results Panel -->
+        <div class="card mt-1" id="results-panel">
+            <div class="card-header">
+                <div class="flex gap-2">
+                    <button class="mastery-tab active" data-tab="output">Output</button>
+                    <button class="mastery-tab" data-tab="timing">Timing</button>
+                    <button class="mastery-tab" data-tab="perf">Perf Counters</button>
+                    <button class="mastery-tab" data-tab="analysis">AI Analysis</button>
+                </div>
+                <div id="judge-status" class="text-muted" style="font-size: 0.8rem;"></div>
+            </div>
+            <div id="tab-output" class="mastery-tab-content active">
+                <div class="text-muted" style="font-size: 0.85rem; padding: 16px;">
+                    Run or submit your code to see results.
+                </div>
+            </div>
+            <div id="tab-timing" class="mastery-tab-content">
+                <div class="text-muted" style="font-size: 0.85rem; padding: 16px;">
+                    Submit your code to see timing data.
+                </div>
+            </div>
+            <div id="tab-perf" class="mastery-tab-content">
+                <div class="text-muted" style="font-size: 0.85rem; padding: 16px;">
+                    Submit your code to see perf counters.
+                </div>
+            </div>
+            <div id="tab-analysis" class="mastery-tab-content">
+                <div class="text-muted" style="font-size: 0.85rem; padding: 16px;">
+                    Submit your code to get AI analysis from qwen2.5-coder.
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Hidden data for JS -->
+{{ editor_code|json_script:"editor-code-data" }}
+<script>
+    window.MASTERY_CONFIG = {
+        problemSlug: "{{ problem.slug }}",
+        csrfToken: "{{ csrf_token }}",
+        runUrl: "{% url 'compute_mastery:api_run' %}",
+        submitUrl: "{% url 'compute_mastery:api_submit' %}",
+        pollUrlBase: "/mastery/judge/status/",
+        initialCode: JSON.parse(document.getElementById('editor-code-data').textContent),
+    };
+</script>
+<script src="{% static 'compute_mastery/results.js' %}"></script>
+{% endblock %}

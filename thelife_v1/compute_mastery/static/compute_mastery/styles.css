@@ -1,0 +1,276 @@
+/* ============================================
+   Compute Mastery — Styles
+   Extends TheLife OLED Dark Theme
+   ============================================ */
+
+/* --- Workspace Layout (Two-Panel) --- */
+.mastery-workspace {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    align-items: start;
+}
+
+@media (max-width: 1200px) {
+    .mastery-workspace {
+        grid-template-columns: 1fr;
+    }
+}
+
+.mastery-panel {
+    min-width: 0;
+}
+
+.mastery-statement {
+    max-height: calc(100vh - 100px);
+    overflow-y: auto;
+}
+
+/* --- Problem Description Markdown --- */
+.mastery-description {
+    font-size: 0.9rem;
+    line-height: 1.7;
+    color: var(--text-primary);
+}
+
+.mastery-description h1,
+.mastery-description h2,
+.mastery-description h3 {
+    color: var(--text-white);
+    margin-top: 16px;
+    margin-bottom: 8px;
+}
+
+.mastery-description code {
+    background: var(--bg-input);
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-size: 0.85em;
+    color: var(--cyan);
+}
+
+.mastery-description pre {
+    background: var(--bg-input);
+    border: 1px solid var(--border-primary);
+    border-radius: var(--radius);
+    padding: 12px;
+    overflow-x: auto;
+    margin: 12px 0;
+}
+
+.mastery-description pre code {
+    background: none;
+    padding: 0;
+    color: var(--text-primary);
+}
+
+.mastery-description ul,
+.mastery-description ol {
+    padding-left: 24px;
+    margin: 8px 0;
+}
+
+.mastery-description li {
+    margin-bottom: 4px;
+}
+
+.mastery-description strong {
+    color: var(--text-white);
+}
+
+/* --- Pre / Code Blocks --- */
+.mastery-pre {
+    background: var(--bg-input);
+    border: 1px solid var(--border-primary);
+    border-radius: var(--radius);
+    padding: 10px 12px;
+    font-family: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace;
+    font-size: 0.82rem;
+    line-height: 1.5;
+    color: var(--text-primary);
+    white-space: pre-wrap;
+    word-break: break-word;
+    overflow-x: auto;
+}
+
+.mastery-code {
+    background: var(--bg-input);
+    border: 1px solid var(--border-primary);
+    border-radius: var(--radius);
+    padding: 12px;
+    font-family: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace;
+    font-size: 0.8rem;
+    line-height: 1.5;
+    color: var(--text-primary);
+    white-space: pre;
+    overflow-x: auto;
+    max-height: 500px;
+    overflow-y: auto;
+}
+
+/* --- Sample Test Cases --- */
+.mastery-sample {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 8px;
+}
+
+.mastery-sample-half {
+    flex: 1;
+    min-width: 0;
+}
+
+/* --- Code Editor (CodeMirror overrides) --- */
+.cm-editor {
+    font-size: 0.85rem;
+    min-height: 400px;
+    max-height: 600px;
+}
+
+.cm-editor .cm-gutters {
+    background: var(--bg-secondary) !important;
+    border-right: 1px solid var(--border-primary) !important;
+    color: var(--text-muted) !important;
+}
+
+.cm-editor .cm-content {
+    font-family: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace !important;
+}
+
+.cm-editor .cm-activeLine {
+    background: var(--bg-card-hover) !important;
+}
+
+.cm-editor .cm-selectionBackground {
+    background: rgba(0, 188, 212, 0.2) !important;
+}
+
+.cm-editor .cm-cursor {
+    border-left-color: var(--cyan) !important;
+}
+
+/* --- Tab System --- */
+.mastery-tab {
+    background: none;
+    border: none;
+    color: var(--text-muted);
+    font-size: 0.8rem;
+    font-weight: 500;
+    padding: 6px 12px;
+    cursor: pointer;
+    border-bottom: 2px solid transparent;
+    transition: var(--transition);
+}
+
+.mastery-tab:hover {
+    color: var(--text-secondary);
+}
+
+.mastery-tab.active {
+    color: var(--cyan);
+    border-bottom-color: var(--cyan);
+}
+
+.mastery-tab-content {
+    display: none;
+}
+
+.mastery-tab-content.active {
+    display: block;
+}
+
+/* --- Results Display --- */
+.result-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 8px 16px;
+    border-bottom: 1px solid var(--border-primary);
+    font-size: 0.85rem;
+}
+
+.result-row:last-child {
+    border-bottom: none;
+}
+
+.result-row .result-status {
+    font-weight: 600;
+    min-width: 80px;
+}
+
+.result-row .result-time {
+    color: var(--cyan);
+    min-width: 100px;
+}
+
+.result-row .result-detail {
+    color: var(--text-secondary);
+    flex: 1;
+}
+
+/* --- Timing Stats --- */
+.timing-stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+    gap: 12px;
+    padding: 16px;
+}
+
+.timing-stat {
+    text-align: center;
+}
+
+.timing-stat .stat-value {
+    font-size: 1.4rem;
+    font-weight: 700;
+    color: var(--cyan);
+}
+
+.timing-stat .stat-label {
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--text-muted);
+    margin-top: 2px;
+}
+
+/* --- Perf Counter Table --- */
+.perf-table {
+    width: 100%;
+    padding: 8px 0;
+}
+
+.perf-table tr td {
+    padding: 6px 16px;
+}
+
+.perf-table tr td:first-child {
+    color: var(--text-secondary);
+    font-size: 0.82rem;
+}
+
+.perf-table tr td:last-child {
+    text-align: right;
+    font-family: 'JetBrains Mono', 'Fira Code', monospace;
+    font-size: 0.85rem;
+    color: var(--text-primary);
+}
+
+/* --- Judge Status Indicator --- */
+.judge-running {
+    color: var(--warning);
+    animation: pulse-text 1.5s ease-in-out infinite;
+}
+
+@keyframes pulse-text {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.4; }
+}
+
+/* --- Code textarea for forms --- */
+.code-input {
+    font-family: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace !important;
+    font-size: 0.82rem !important;
+    line-height: 1.5 !important;
+    tab-size: 4;
+}

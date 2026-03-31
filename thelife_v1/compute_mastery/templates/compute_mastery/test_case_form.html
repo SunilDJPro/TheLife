@@ -1,0 +1,76 @@
+{% extends "base.html" %}
+{% load widget_tweaks %}
+
+{% block title %}Test Cases — {{ problem.title }} — Compute Mastery{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h2>Test Cases: {{ problem.title }}</h2>
+    <a href="{% url 'compute_mastery:problem_detail' slug=problem.slug %}" class="btn btn-outline btn-sm">Back to Problem</a>
+</div>
+
+<form method="post">
+    {% csrf_token %}
+    {{ formset.management_form }}
+
+    {% for form in formset %}
+    <div class="card mb-3">
+        {# Hidden fields: PK (id) + FK (problem) — required by the formset #}
+        {% for hidden in form.hidden_fields %}{{ hidden }}{% endfor %}
+
+        <div class="card-header">
+            <h3>Test Case {{ forloop.counter }}</h3>
+            {% if form.instance.pk %}
+            <label class="flex gap-1" style="align-items: center; font-size: 0.8rem;">
+                {{ form.DELETE }}
+                <span class="text-danger">Delete</span>
+            </label>
+            {% endif %}
+        </div>
+
+        {% if form.errors %}
+        <div class="alert alert-error mt-1">
+            {% for field, errors in form.errors.items %}
+            <div>{{ field }}: {{ errors.0 }}</div>
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        <div class="form-row mt-2">
+            <div class="form-group" style="flex: 1;">
+                <label>Input (stdin)</label>
+                {{ form.input_data }}
+            </div>
+            <div class="form-group" style="flex: 1;">
+                <label>Expected Output (stdout)</label>
+                {{ form.expected_output }}
+            </div>
+        </div>
+
+        <div class="form-row">
+            <div class="form-group">
+                <label>Order</label>
+                {{ form.order }}
+            </div>
+            <div class="form-group">
+                <label>Time Limit (ms)</label>
+                {{ form.time_limit_ms }}
+            </div>
+            <div class="form-group">
+                <label>Memory Limit (MB)</label>
+                {{ form.memory_limit_mb }}
+            </div>
+            <div class="form-group" style="display: flex; align-items: center; gap: 8px; padding-top: 20px;">
+                {{ form.is_sample }}
+                <label style="margin: 0; text-transform: none; font-size: 0.85rem;">Sample (visible)</label>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+
+    <div class="btn-group">
+        <button type="submit" class="btn btn-emerald">Save Test Cases</button>
+        <a href="{% url 'compute_mastery:problem_detail' slug=problem.slug %}" class="btn btn-outline">Cancel</a>
+    </div>
+</form>
+{% endblock %}

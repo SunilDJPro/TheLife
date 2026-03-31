@@ -13,6 +13,7 @@ urlpatterns = [
     path('skills/', include('skills.urls', namespace='skills')),
     path('entertainment/', include('entertainment.urls', namespace='entertainment')),
     path('scoring/', include('scoring.urls', namespace='scoring')),
+    path('mastery/', include('compute_mastery.urls', namespace='compute_mastery')),
 ]
 
 if settings.DEBUG:
